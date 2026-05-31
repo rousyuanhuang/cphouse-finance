@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- 背景深色漸層 -->
+    <linearGradient id="bg" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#2a3a4a"/>
+      <stop offset="100%" stop-color="#111c27"/>
+    </linearGradient>
+    <!-- 頂部光澤 -->
+    <linearGradient id="gloss" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <!-- C 字漸層 -->
+    <linearGradient id="cCol" x1="0%" y1="0%" x2="30%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#c8dce8"/>
+    </linearGradient>
+    <!-- P 字漸層 -->
+    <linearGradient id="pCol" x1="0%" y1="0%" x2="30%" y2="100%">
+      <stop offset="0%" stop-color="#c8ecd6"/>
+      <stop offset="100%" stop-color="#7bbfa0"/>
+    </linearGradient>
+    <!-- 邊框漸層 -->
+    <linearGradient id="border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.15"/>
+    </linearGradient>
+    <!-- 文字陰影濾鏡 -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="8" result="blur"/>
+      <feFlood flood-color="#7BB8A0" flood-opacity="0.4" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="shadow"/>
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="drop" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="3" dy="5" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <clipPath id="round">
+      <rect width="512" height="512" rx="108"/>
+    </clipPath>
+  </defs>
+
+  <!-- 圓角遮罩 -->
+  <g clip-path="url(#round)">
+    <!-- 背景 -->
+    <rect width="512" height="512" fill="url(#bg)"/>
+
+    <!-- 底部環境光 -->
+    <ellipse cx="256" cy="480" rx="220" ry="60" fill="#4a8870" opacity="0.12"/>
+
+    <!-- C 陰影層（立體感）-->
+    <text x="86" y="323"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="238" font-weight="700"
+      fill="#000000" opacity="0.4">C</text>
+
+    <!-- P 陰影層 -->
+    <text x="246" y="323"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="238" font-weight="700"
+      fill="#000000" opacity="0.4">P</text>
+
+    <!-- C 主體 -->
+    <text x="82" y="318"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="238" font-weight="700"
+      fill="url(#cCol)"
+      filter="url(#drop)">C</text>
+
+    <!-- P 主體 -->
+    <text x="242" y="318"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="238" font-weight="700"
+      fill="url(#pCol)"
+      filter="url(#glow)">P</text>
+
+    <!-- 高光反射（左上） -->
+    <text x="82" y="318"
+      font-family="Georgia, 'Times New Roman', serif"
+      font-size="238" font-weight="700"
+      fill="#ffffff" opacity="0.07">C</text>
+
+    <!-- 分隔線 -->
+    <rect x="90" y="346" width="332" height="1.5" rx="1" fill="#ffffff" opacity="0.15"/>
+
+    <!-- 財報文字 -->
+    <text x="256" y="402"
+      font-family="-apple-system, 'PingFang TC', sans-serif"
+      font-size="46" font-weight="300"
+      fill="#ffffff" text-anchor="middle"
+      opacity="0.45" letter-spacing="13">財報</text>
+
+    <!-- 頂部玻璃光澤 -->
+    <rect width="512" height="512" fill="url(#gloss)"/>
+  </g>
+
+  <!-- 邊框 -->
+  <rect width="512" height="512" rx="108" fill="none"
+    stroke="url(#border)" stroke-width="2"/>
+</svg>
