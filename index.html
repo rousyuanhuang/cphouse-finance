@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CP 財報">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" href="/icon.svg">
 <style>
   :root {
     --primary: #3D4A5C;
@@ -931,8 +931,18 @@ function toggleNote(inputId, btnId) {
   const inp = document.getElementById(inputId);
   const btn = document.getElementById(btnId);
   if (!inp) return;
-  inp.classList.toggle('show');
-  if (inp.classList.contains('show')) inp.focus();
+  // 先關閉所有其他備注欄
+  const isShowing = inp.classList.contains('show');
+  document.querySelectorAll('.note-input.show').forEach(el => {
+    if (el.id !== inputId) el.classList.remove('show');
+  });
+  // 切換當前備注欄
+  if (isShowing) {
+    inp.classList.remove('show');
+  } else {
+    inp.classList.add('show');
+    inp.focus();
+  }
   syncNoteBtn(inputId, btnId);
 }
 
