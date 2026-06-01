@@ -81,8 +81,8 @@
 
   /* ── Dynamic Lists ── */
   .item-list { display: flex; flex-direction: column; gap: 8px; }
-  .item-row { display: flex; align-items: center; gap: 6px; }
-  .item-row input.item-name { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 17px; background: transparent; color: var(--text-muted); }
+  .item-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .item-row input.item-name { flex: 1; min-width: 80px; max-width: 120px; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 15px; background: transparent; color: var(--text-muted); word-break: break-all; white-space: normal; }
   .item-row input.item-name:hover { border-color: var(--border); background: #fff; }
   .item-row input.item-name:focus { border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
   .item-row input.item-amt { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 17px; text-align: left; background: #fff; }
