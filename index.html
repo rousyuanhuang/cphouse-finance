@@ -515,6 +515,7 @@
     <div class="field-row"><label>銀行貸款</label><span class="calc num" id="a-loanAmount">-</span></div>
     <div class="field-row"><label>自備現金</label><span class="calc num" id="a-ownCash">-</span></div>
     <div class="field-row"><label>購房費用合計</label><span class="calc num" id="a-costItems">-</span></div>
+    <div class="field-row"><label>房貸利息（含歷年）</label><span class="calc num" id="a-totalInterest">-</span></div>
     <hr class="divider">
     <div class="field-row"><label><strong>總投入成本</strong></label><span class="calc num" id="a-totalCost" style="color:var(--primary);font-size:17px;font-weight:700;">-</span></div>
   </div>
@@ -1294,8 +1295,18 @@ function renderAnnual() {
   document.getElementById('a-purchasePrice').textContent = fmt(pp);
   document.getElementById('a-loanAmount').textContent = fmt(la);
   document.getElementById('a-ownCash').textContent = fmt(pp - la);
+  // 計算歷年累積利息（從購入年度開始）
+  let totalInterestAll = 0;
+  const startYr = Math.min(settings.startYear || START_YEAR, settings.loanStartYear || START_YEAR, 110);
+  for (let yr = startYr; yr <= currentYear; yr++) {
+    const yd2 = (yr === currentYear) ? yearData : loadYearData(yr);
+    for (let m = 1; m <= 12; m++) {
+      if (yd2[m]) totalInterestAll += yd2[m].mortgageInterest || 0;
+    }
+  }
   document.getElementById('a-costItems').textContent = fmt(ci);
-  document.getElementById('a-totalCost').textContent = fmt((pp - la) + ci);
+  document.getElementById('a-totalInterest').textContent = fmt(totalInterestAll);
+  document.getElementById('a-totalCost').textContent = fmt((pp - la) + ci + totalInterestAll);
 }
 
 // ═══════════════ UTILS ═══════════════
