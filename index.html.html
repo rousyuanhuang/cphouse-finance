@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CP 財報</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#3D4A5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CP 財報">
+<link rel="apple-touch-icon" href="/icon.svg">
+<style>
+  :root {
+    --primary: #3D4A5C;
+    --primary-light: #5A6D82;
+    --accent: #7B9E87;
+    --accent-light: #9ABBA6;
+    --danger: #B85C5C;
+    --warn: #C4895A;
+    --bg: #F4F1ED;
+    --card: #FFFFFF;
+    --border: #DDD9D3;
+    --text: #2C3540;
+    --text-muted: #8A95A0;
+    --income-bg: #EFF5F1;
+    --expense-bg: #FBF5EE;
+    --cost-bg: #EEF1F5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { zoom: 0.91; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif; background: var(--bg); color: var(--text); font-size: 17px; }
+
+  /* ── Header ── */
+  header { background: var(--primary); color: #fff; padding: 10px 14px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  header h1 { font-size: 17px; font-weight: 700; flex: 1; }
+  .year-nav { display: flex; align-items: center; gap: 6px; }
+  .year-nav button { background: rgba(255,255,255,.18); border: none; color: #fff; font-size: 17px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .year-nav button:hover { background: rgba(255,255,255,.3); }
+  .year-display { background: rgba(255,255,255,.2); border-radius: 20px; padding: 4px 14px; font-size: 17px; font-weight: 700; min-width: 80px; text-align: center; }
+
+  /* ── Tab Bar ── */
+  .tab-bar { display: flex; background: #ffffff; border-bottom: 2px solid var(--border); }
+  .tab-btn { flex: 1; padding: 10px 6px; text-align: center; color: var(--text-muted); font-size: 17px; font-weight: 600; cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; transition: .2s; white-space: nowrap; }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--accent); }
+
+  /* ── Main Content ── */
+  .tab-content { display: none; padding: 14px; max-width: 900px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* ── Cards ── */
+  .card { background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card-title { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card.income  { border-left: 4px solid var(--accent); background: var(--income-bg); }
+  .card.expense { border-left: 4px solid var(--warn); background: var(--expense-bg); }
+  .card.cost    { border-left: 4px solid var(--primary-light); background: var(--cost-bg); }
+
+  /* ── Forms ── */
+  .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .field-row label { font-size: 17px; color: var(--text-muted); flex: 1; min-width: 0; }
+  .field-row input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 17px; background: #fff; min-width: 0; }
+  .field-row input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
+  .field-row .unit { font-size: 17px; color: var(--text-muted); flex-shrink: 0; }
+  .field-row .calc { font-size: 17px; color: var(--primary); font-weight: 600; }
+
+  /* ── Room Table ── */
+  .room-table { width: 100%; border-collapse: collapse; font-size: 17px; }
+  .room-table th { background: var(--primary); color: #fff; padding: 8px 8px; text-align: center; font-size: 17px; }
+  .room-table th:first-child { border-radius: 8px 0 0 0; }
+  .room-table th:last-child { border-radius: 0 8px 0 0; }
+  .room-table td { padding: 7px 6px; border-bottom: 1px solid var(--border); text-align: center; }
+  .room-table tr:last-child td { border-bottom: none; }
+  .room-table input { width: 100%; padding: 6px 6px; border: 1px solid transparent; border-radius: 6px; font-size: 17px; text-align: right; background: transparent; color: var(--text); }
+  .room-table input:hover { border-color: var(--border); background: #fff; }
+  .room-table input:focus { outline: none; border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
+  .room-table input.elec-input { border-color: var(--border); background: #fff; }
+  .room-table input.elec-input:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
+  .room-table input:disabled { background: #f0f0f0; color: #aaa; }
+  .room-name { font-weight: 700; color: var(--primary); }
+  .vacant-toggle { padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); font-size: 17px; cursor: pointer; background: #fff; color: var(--text-muted); }
+  .vacant-toggle.vacant { background: #fde8e8; color: var(--danger); border-color: #f5c6c6; }
+
+  /* ── Dynamic Lists ── */
+  .item-list { display: flex; flex-direction: column; gap: 8px; }
+  .item-row { display: flex; align-items: center; gap: 6px; }
+  .item-row input.item-name { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 17px; background: transparent; color: var(--text-muted); }
+  .item-row input.item-name:hover { border-color: var(--border); background: #fff; }
+  .item-row input.item-name:focus { border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
+  .item-row input.item-amt { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 17px; text-align: left; background: #fff; }
+  .item-row input.item-amt:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
+  .item-row input:focus { outline: none; border-color: var(--primary-light); }
+  .btn-note-wrap { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+  .btn-note { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 7px; font-size: 12px; cursor: pointer; transition: .15s; white-space: nowrap; flex-shrink: 0; }
+  .btn-note:hover, .btn-note.has-note { border-color: var(--primary-light); color: var(--primary); background: #f0f4f8; }
+  .note-input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--primary-light); border-radius: 7px; font-size: 15px; background: #fff; display: none; }
+  .note-input.show { display: block; }
+  .field-row input[type="number"] { flex: 1; min-width: 0; text-align: right; }
+  #i-petFee, #i-penalty, #e-water, #e-elec { text-align: left; }
+  .plain-input { border-color: transparent !important; background: transparent !important; box-shadow: none !important; }
+  .plain-input:hover { border-color: var(--border) !important; background: #fff !important; }
+  .plain-input:focus { border-color: var(--primary-light) !important; background: #fff !important; box-shadow: 0 0 0 3px rgba(123,158,135,.2) !important; }
+  .btn-del { background: #fde8e8; color: var(--danger); border: none; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .btn-add { background: none; border: 1.5px dashed var(--border); border-radius: 8px; padding: 8px; width: 100%; cursor: pointer; color: var(--text-muted); font-size: 17px; margin-top: 4px; transition: .15s; }
+  .btn-add:hover { border-color: var(--primary-light); color: var(--primary-light); background: #f0f8ff; }
+
+  /* ── Summary Box ── */
+  .summary-box { background: var(--primary); color: #fff; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .summary-box .title { font-size: 17px; opacity: .75; margin-bottom: 10px; font-weight: 600; letter-spacing: .5px; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .summary-item { background: rgba(255,255,255,.12); border-radius: 10px; padding: 10px 12px; }
+  .summary-item.full { grid-column: 1/-1; }
+  .summary-item .label { font-size: 17px; opacity: .8; margin-bottom: 3px; }
+  .summary-item .value { font-size: 20px; font-weight: 700; }
+  .summary-item .value.green  { color: #7defa1; }
+  .summary-item .value.red    { color: #ffa0a0; }
+  .summary-item .value.yellow { color: #ffd966; }
+
+  /* ── Month Selector ── */
+  .month-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .month-btn { padding: 7px 13px; border-radius: 20px; border: 1.5px solid var(--border); background: #fff; font-size: 17px; font-weight: 600; cursor: pointer; transition: .15s; color: var(--text-muted); }
+  .month-btn.active    { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .month-btn.has-data  { border-color: var(--accent); color: var(--accent); }
+  .month-btn.has-data.active { background: var(--accent); color: #fff; }
+
+  /* ── Mortgage ── */
+  .mortgage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mortgage-item { background: rgba(61,74,92,.05); border-radius: 8px; padding: 10px; }
+  .mortgage-item label { display: block; font-size: 17px; color: var(--text-muted); margin-bottom: 6px; }
+  .mortgage-item input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 17px; text-align: right; background: #fff; }
+  .mortgage-item input:focus { outline: none; border-color: var(--primary-light); }
+  .mortgage-hint { font-size: 17px; color: var(--text-muted); margin-top: 4px; }
+  .mortgage-total { text-align: center; margin-top: 8px; font-size: 17px; color: var(--text-muted); }
+  .mortgage-total span { font-weight: 700; color: var(--danger); }
+
+  /* ── Cost Info ── */
+  .cost-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .cost-info-item { background: #f7fafc; border-radius: 8px; padding: 10px; }
+  .cost-info-item label { display: block; font-size: 17px; color: var(--text-muted); margin-bottom: 6px; }
+  .cost-info-item input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 17px; text-align: right; background: #fff; }
+  .cost-info-item input:focus { outline: none; border-color: var(--primary-light); }
+  .cost-info-item.derived { background: #eaf3fb; }
+  .cost-info-item.derived .val { font-size: 17px; font-weight: 700; color: var(--primary); padding-top: 2px; }
+
+  /* ── Annual Table ── */
+  .annual-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .annual-table { width: 100%; border-collapse: collapse; font-size: 17px; min-width: 620px; }
+  .annual-table th { background: var(--primary); color: #fff; padding: 9px 7px; text-align: right; font-size: 17px; white-space: nowrap; }
+  .annual-table th:first-child { text-align: center; }
+  .annual-table td { padding: 8px 7px; border-bottom: 1px solid var(--border); text-align: right; font-size: 17px; }
+  .annual-table td:first-child { text-align: center; font-weight: 700; color: var(--primary); }
+  .annual-table tr:hover td { background: #f7fafc; }
+  .annual-table .total-row td { background: #EEF1F5; font-weight: 700; border-top: 2px solid var(--primary); }
+  .pos { color: var(--accent); }
+  .neg { color: var(--danger); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── Carryover badge ── */
+  .carryover-badge { background: rgba(255,255,255,.15); border-radius: 6px; padding: 6px 10px; font-size: 17px; margin-bottom: 10px; }
+
+  /* ── Misc ── */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .btn-primary { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 17px; font-weight: 600; cursor: pointer; transition: .15s; }
+  .btn-primary:hover { background: var(--primary-light); }
+  .btn-save { width: 100%; margin-top: 6px; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2C3540; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 17px; z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .info-note { background: #fff8e1; border-left: 3px solid var(--warn); border-radius: 0 8px 8px 0; padding: 8px 12px; font-size: 17px; color: #856404; margin-bottom: 10px; }
+
+  /* ── 地點選擇列 ── */
+  .prop-bar { display: flex; align-items: center; gap: 6px; background: #ffffff; padding: 7px 14px; border-bottom: 1px solid var(--border); }
+  .prop-bar select { flex: 1; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-size: 17px; font-weight: 600; cursor: pointer; }
+  .prop-nav-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 17px; flex-shrink: 0; }
+  .prop-nav-btn:hover { background: var(--border); }
+  .prop-add-btn { background: var(--accent); border: none; color: #fff; border-radius: 6px; padding: 5px 10px; font-size: 17px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+  .prop-del-btn { background: rgba(184,92,92,.3); border: none; color: #fff; border-radius: 6px; padding: 5px 8px; font-size: 17px; cursor: pointer; flex-shrink: 0; }
+
+  /* ── 檢視模式 ── */
+  .view-banner { background: #7B9E87; color: #fff; text-align: center; padding: 7px; font-size: 17px; font-weight: 600; letter-spacing: .5px; }
+  body.view-mode input, body.view-mode select { pointer-events: none; background: transparent !important; border-color: transparent !important; box-shadow: none !important; color: var(--text); }
+  body.view-mode .btn-add, body.view-mode .btn-del, body.view-mode .btn-primary, body.view-mode .btn-save, body.view-mode .prop-add-btn, body.view-mode .prop-del-btn, body.view-mode .prop-nav-btn { display: none !important; }
+  body.view-mode .vacant-toggle { pointer-events: none; cursor: default; }
+  body.view-mode .prop-bar select { pointer-events: auto; }
+
+  @media (max-width: 480px) {
+    .cost-info-grid { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .field-row label { min-width: 75px; font-size: 17px; }
+    header h1 { font-size: 17px; }
+  }
+
+  /* ── 登入畫面 ── */
+  #loginScreen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; flex-direction: column; gap: 0;
+  }
+  .login-card {
+    background: white; border-radius: 20px; padding: 40px 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.1); width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .login-logo {
+    width: 80px; height: 80px; background: var(--primary);
+    border-radius: 20px; display: flex; align-items: center;
+    justify-content: center; flex-direction: column;
+  }
+  .login-logo span:first-child { color: white; font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+  .login-logo span:last-child  { color: #7B9E87; font-size: 13px; font-weight: 600; margin-top: -2px; }
+  .login-title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .login-sub { font-size: 13px; color: var(--text-muted); margin-top: -12px; }
+  .login-input {
+    width: 100%; padding: 13px 16px; border: 1.5px solid var(--border);
+    border-radius: 12px; font-size: 18px; letter-spacing: 4px;
+    text-align: center; outline: none; transition: border-color .2s;
+    background: var(--bg);
+  }
+  .login-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(61,74,92,.1); }
+  .login-btn {
+    width: 100%; padding: 14px; background: var(--primary); color: white;
+    border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .login-btn:hover { opacity: .88; }
+  .login-err { color: var(--danger); font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<!-- 登入畫面 -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <span>CP</span>
+      <span>財報</span>
+    </div>
+    <div class="login-title">CP 財報</div>
+    <div class="login-sub">請輸入密碼登入</div>
+    <input class="login-input" id="loginPwd" type="password" placeholder="••••" maxlength="8"
+      onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">登入</button>
+    <div class="login-err" id="loginErr">密碼錯誤，請再試一次</div>
+  </div>
+</div>
+
+<div class="view-banner" id="viewBanner" style="display:none">※ 檢視模式｜僅供查看，無法修改</div>
+
+<header>
+  <h1>財報系統</h1>
+  <span id="syncStatus" style="font-size:12px;flex-shrink:0;">️ 載入中…</span>
+  <div class="year-nav">
+    <button onclick="changeYear(-1)">◀</button>
+    <div class="year-display" id="yearDisplay">民國 115 年</div>
+    <button onclick="changeYear(+1)">▶</button>
+  </div>
+</header>
+
+<div class="prop-bar">
+  <button class="prop-nav-btn" onclick="prevProperty()">◀</button>
+  <select id="propSelect" onchange="switchProperty(this.value)"></select>
+  <button class="prop-nav-btn" onclick="nextProperty()">▶</button>
+  <button class="prop-add-btn" onclick="addPropertyPrompt()">＋ 新增地點</button>
+  <button class="prop-del-btn" onclick="deletePropertyPrompt()"></button>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('cost',this)">› 成本設定</button>
+  <button class="tab-btn" onclick="switchTab('monthly',this)">› 每月財報</button>
+  <button class="tab-btn" onclick="switchTab('annual',this)">› 年度總覽</button>
+</div>
+<div id="beforeStartBanner" style="display:none;background:#f0ede8;color:#9B8578;text-align:center;padding:40px;font-size:17px;"></div>
+<div id="mainContent">
+
+<!-- ═══════════════════ 成本設定 ═══════════════════ -->
+<div id="tab-cost" class="tab-content active">
+  <div class="info-note">※ 成本設定為全年共用，所有年份皆適用。</div>
+
+  <div class="card cost">
+    <div class="card-title">▪ 房屋基本資訊</div>
+    <div class="field-row" style="margin-bottom:14px;">
+      <label>購入年度（民國）</label>
+      <input type="number" id="startYear" class="plain-input" style="text-align:right;" oninput="saveSettings()">
+      <span class="unit">年</span>
+    </div>
+    <div class="cost-info-grid">
+      <div class="cost-info-item">
+        <label>房屋買入價</label>
+        <input type="number" id="purchasePrice" value="10800000" oninput="updateCostCalc()">
+      </div>
+      <div class="cost-info-item">
+        <label>銀行貸款金額</label>
+        <input type="number" id="loanAmount" value="7880000" oninput="updateCostCalc()">
+      </div>
+      <div class="cost-info-item derived">
+        <label>自備現金（買入價－貸款）</label>
+        <div class="val" id="ownCash">2,920,000</div>
+      </div>
+      <div class="cost-info-item derived">
+        <label>總投入成本</label>
+        <div class="val" id="totalCostDisplay">2,924,200</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card cost">
+    <div class="card-title">▪ 相關費用</div>
+    <div class="item-list" id="costItemList"></div>
+    <button class="btn-add" onclick="addCostItem()">＋ 新增費用項目</button>
+  </div>
+
+  <div class="card cost">
+    <div class="card-title">▪ 房貸參數設定</div>
+    <div class="info-note">以下數值用於自動推算各年度利息／本金，可依實際對帳單微調每月數字。</div>
+    <div class="field-row">
+      <label>貸款起算年度</label>
+      <input type="number" id="loanStartYear" class="plain-input" style="text-align:right;" oninput="saveSettings()">
+      <span class="unit">年</span>
+      <input type="number" id="loanStartMonth" class="plain-input" min="1" max="12" style="text-align:right;max-width:70px;" oninput="saveSettings()">
+      <span class="unit">月</span>
+    </div>
+    <div class="field-row">
+      <label>年利率</label>
+      <input type="number" id="annualRate" value="3.475" step="0.001" oninput="saveSettings()">
+      <span class="unit">%</span>
+    </div>
+    <div class="field-row">
+      <label>貸款年期</label>
+      <input type="number" id="loanYears" value="30" oninput="saveSettings()">
+      <span class="unit">年</span>
+    </div>
+    <div class="field-row">
+      <label>估算每月還款總額</label>
+      <span class="calc" id="estimatedPaymentDisplay">計算中…</span>
+    </div>
+    <div class="info-note" style="margin-top:8px;">依貸款金額 × 月利率 × (1＋月利率)^期數 ÷ ((1＋月利率)^期數 − 1) 試算</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">▪ 房間設定</div>
+    <div class="item-list" id="roomConfigBody"></div>
+    <button class="btn-add" onclick="addRoom()">＋ 新增房間</button>
+  </div>
+
+  <button class="btn-primary btn-save" onclick="saveCostSettings()"> 儲存成本設定</button>
+  <button class="btn-save" style="margin-top:8px;width:100%;padding:11px;border:1.5px solid var(--danger);background:none;color:var(--danger);border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;" onclick="resetAllData()"> 清除所有資料</button>
+</div>
+
+<!-- ═══════════════════ 每月財報 ═══════════════════ -->
+<div id="tab-monthly" class="tab-content">
+  <div class="month-nav" id="monthNav"></div>
+
+  <div class="summary-box">
+    <div class="title" id="summaryTitle">▪ 本月計算結果</div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="label">本月總收入</div>
+        <div class="value green num" id="s-totalIncome">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">本月總支出（支出+利息+本金）</div>
+        <div class="value red num" id="s-totalExpense">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">本月淨收入（收入－支出－利息）</div>
+        <div class="value green num" id="s-netIncome">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">本月現金流（總收入－總支出）</div>
+        <div class="value green num" id="s-cashflow">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">累積淨收入（含歷年）</div>
+        <div class="value green num" id="s-cumNet">0</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">預估年度收益率</div>
+        <div class="value green num" id="s-estReturn">0.00%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 房貸 -->
+  <div class="card">
+    <div class="card-title">▪ 本月房貸拆分</div>
+    <div class="mortgage-grid">
+      <div class="mortgage-item">
+        <label>本月利息（元）</label>
+        <input type="number" id="m-interest" oninput="calcMonthly()">
+        <div class="mortgage-hint" id="hint-interest"></div>
+      </div>
+      <div class="mortgage-item">
+        <label>本月本金（元）</label>
+        <input type="number" id="m-principal" oninput="calcMonthly()">
+        <div class="mortgage-hint" id="hint-principal"></div>
+      </div>
+    </div>
+    <div class="mortgage-total">房貸合計：<span id="m-mortgageTotal">0</span> 元</div>
+  </div>
+
+  <!-- 收入 -->
+  <div class="card income">
+    <div class="card-title">※ 收入</div>
+    <table class="room-table">
+      <thead><tr><th>房間</th><th>租金</th><th>電費</th><th>狀態</th></tr></thead>
+      <tbody id="roomIncomeBody"></tbody>
+    </table>
+    <hr class="divider">
+    <div class="field-row">
+      <label>寵物清潔費</label>
+      <input type="number" id="i-petFee" value="0" oninput="calcMonthly()">
+      <span class="unit">元</span>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-i-petFee-note" onclick="toggleNote('i-petFee-note','btn-i-petFee-note')">備注</button><input class="note-input" type="text" id="i-petFee-note" placeholder="如：房號" oninput="syncNoteBtn('i-petFee-note','btn-i-petFee-note')"></div>
+    </div>
+    <div class="field-row">
+      <label>違約金</label>
+      <input type="number" id="i-penalty" value="0" oninput="calcMonthly()">
+      <span class="unit">元</span>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-i-penalty-note" onclick="toggleNote('i-penalty-note','btn-i-penalty-note')">備注</button><input class="note-input" type="text" id="i-penalty-note" placeholder="如：房號" oninput="syncNoteBtn('i-penalty-note','btn-i-penalty-note')"></div>
+    </div>
+    <hr class="divider">
+    <div class="card-title" style="font-size:13px;margin-bottom:8px;">其他收入</div>
+    <div class="item-list" id="incomeOtherList"></div>
+    <button class="btn-add" onclick="addDynItem('incomeOtherList')">＋ 新增其他收入</button>
+  </div>
+
+  <!-- 固定支出 -->
+  <div class="card expense">
+    <div class="card-title">▪ 固定支出（不含房貸）</div>
+    <div class="item-list" id="fixedExpList"></div>
+    <button class="btn-add" onclick="addDynItem('fixedExpList')">＋ 新增固定支出</button>
+  </div>
+
+  <!-- 變動支出 -->
+  <div class="card expense">
+    <div class="card-title">▪ 變動支出</div>
+    <div class="field-row">
+      <label>水費</label>
+      <input type="number" id="e-water" value="0" oninput="calcMonthly()">
+      <span class="unit">元</span>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-e-water-note" onclick="toggleNote('e-water-note','btn-e-water-note')">備注</button><input class="note-input" type="text" id="e-water-note" placeholder="備注" oninput="syncNoteBtn('e-water-note','btn-e-water-note')"></div>
+    </div>
+    <div class="field-row">
+      <label>電費</label>
+      <input type="number" id="e-elec" value="0" oninput="calcMonthly()">
+      <span class="unit">元</span>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-e-elec-note" onclick="toggleNote('e-elec-note','btn-e-elec-note')">備注</button><input class="note-input" type="text" id="e-elec-note" placeholder="備注" oninput="syncNoteBtn('e-elec-note','btn-e-elec-note')"></div>
+    </div>
+    <hr class="divider">
+    <div class="card-title" style="font-size:13px;margin-bottom:8px;">其他變動支出</div>
+    <div class="item-list" id="varExpList"></div>
+    <button class="btn-add" onclick="addDynItem('varExpList')">＋ 新增變動支出</button>
+  </div>
+
+  <button class="btn-primary btn-save" onclick="saveMonthlyData()"> 儲存本月資料</button>
+</div>
+
+<!-- ═══════════════════ 年度總覽 ═══════════════════ -->
+<div id="tab-annual" class="tab-content">
+  <div class="summary-box">
+    <div class="title" id="annualTitle">▪ 年度總覽</div>
+    <div class="summary-grid">
+      <div class="summary-item"><div class="label">年度總收入</div><div class="value green num" id="a-totalIncome">0</div></div>
+      <div class="summary-item"><div class="label">年度總支出（含利息+本金）</div><div class="value red num" id="a-totalExpense">0</div></div>
+      <div class="summary-item"><div class="label">年度淨收入</div><div class="value yellow num" id="a-netIncome">0</div></div>
+      <div class="summary-item"><div class="label">年度現金流</div><div class="value yellow num" id="a-cashflow">0</div></div>
+      <div class="summary-item full"><div class="label">年度收益</div><div class="value yellow num" id="a-estReturn">0.00%</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"> 各月明細</div>
+    <div class="annual-table-wrap">
+      <table class="annual-table">
+        <thead>
+          <tr>
+            <th>月份</th><th>總收入</th><th>總支出</th><th>利息</th><th>本金</th>
+            <th>淨收入</th><th>現金流</th><th>累積淨收入</th>
+          </tr>
+        </thead>
+        <tbody id="annualBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card cost">
+    <div class="card-title"> 成本摘要</div>
+    <div class="field-row"><label>房屋買入價</label><span class="calc num" id="a-purchasePrice">-</span></div>
+    <div class="field-row"><label>銀行貸款</label><span class="calc num" id="a-loanAmount">-</span></div>
+    <div class="field-row"><label>自備現金</label><span class="calc num" id="a-ownCash">-</span></div>
+    <div class="field-row"><label>購房費用合計</label><span class="calc num" id="a-costItems">-</span></div>
+    <hr class="divider">
+    <div class="field-row"><label><strong>總投入成本</strong></label><span class="calc num" id="a-totalCost" style="color:var(--primary);font-size:17px;font-weight:700;">-</span></div>
+  </div>
+</div>
+
+</div><!-- end mainContent -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Service Worker ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ── 登入 ──
+const EDITOR_PWD = '6992';
+const VIEWER_PWD = '1785';
+
+function doLogin() {
+  const pwd = document.getElementById('loginPwd').value.trim();
+  if (pwd === EDITOR_PWD) {
+    sessionStorage.setItem('cp_role', 'editor');
+    document.getElementById('loginScreen').style.display = 'none';
+  } else if (pwd === VIEWER_PWD) {
+    sessionStorage.setItem('cp_role', 'viewer');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.body.classList.add('view-mode');
+    document.getElementById('viewBanner').style.display = 'block';
+  } else {
+    const err = document.getElementById('loginErr');
+    err.style.display = 'block';
+    document.getElementById('loginPwd').value = '';
+    setTimeout(() => err.style.display = 'none', 2500);
+  }
+}
+
+function checkLogin() {
+  const role = sessionStorage.getItem('cp_role');
+  if (role === 'editor') {
+    document.getElementById('loginScreen').style.display = 'none';
+  } else if (role === 'viewer') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.body.classList.add('view-mode');
+    document.getElementById('viewBanner').style.display = 'block';
+  }
+  // else: 顯示登入畫面（預設）
+}
+
+// ── 檢視模式（URL 參數，保留相容性）──
+if (new URLSearchParams(location.search).get('view') === '1') {
+  sessionStorage.setItem('cp_role', 'viewer');
+}
+// ═══════════════ CONSTANTS ═══════════════
+
+const START_YEAR = 115; // 民國年，固定115年為參考起點
+
+// ═══════════════ PROPERTY MANAGEMENT ═══════════════
+
+let currentPropertyId = null;
+
+function loadPropertiesStore() {
+  try { return JSON.parse(localStorage.getItem('yc_properties') || 'null'); } catch { return null; }
+}
+function savePropertiesStore(props) { localStorage.setItem('yc_properties', JSON.stringify(props)); }
+function getProperties() { return loadPropertiesStore() || [{ id: 'default', name: '物件一' }]; }
+
+function renderPropSelector() {
+  const props = getProperties();
+  const sel = document.getElementById('propSelect');
+  sel.innerHTML = '';
+  props.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.name;
+    if (p.id === currentPropertyId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function switchProperty(id) {
+  currentPropertyId = id;
+  localStorage.setItem('yc_current_prop', id);
+  settings = loadSettings() || defaultSettings();
+  yearData = loadYearData(currentYear);
+  _draft = null;
+  renderPropSelector();
+  renderCostTab();
+  renderMonthNav();
+  selectMonth(currentMonth);
+  if (document.getElementById('tab-annual').classList.contains('active')) renderAnnual();
+}
+
+function addPropertyPrompt() {
+  const name = prompt('新地點名稱：');
+  if (!name || !name.trim()) return;
+  const props = getProperties();
+  const id = 'p' + Date.now();
+  props.push({ id, name: name.trim() });
+  savePropertiesStore(props);
+  switchProperty(id);
+}
+
+function deletePropertyPrompt() {
+  const props = getProperties();
+  if (props.length <= 1) { toast('至少需要保留一個地點'); return; }
+  const cur = props.find(p => p.id === currentPropertyId);
+  if (!confirm(`確定刪除「${cur?.name}」的所有資料？此操作無法復原。`)) return;
+  Object.keys(localStorage).filter(k => k.includes(currentPropertyId)).forEach(k => localStorage.removeItem(k));
+  const newProps = props.filter(p => p.id !== currentPropertyId);
+  savePropertiesStore(newProps);
+  currentPropertyId = newProps[0].id;
+  localStorage.setItem('yc_current_prop', currentPropertyId);
+  settings = loadSettings() || defaultSettings();
+  yearData = loadYearData(currentYear);
+  renderPropSelector();
+  renderCostTab();
+  renderMonthNav();
+  selectMonth(1);
+  toast('已刪除地點');
+}
+
+function prevProperty() {
+  const props = getProperties();
+  const idx = props.findIndex(p => p.id === currentPropertyId);
+  if (idx > 0) switchProperty(props[idx - 1].id);
+}
+
+function nextProperty() {
+  const props = getProperties();
+  const idx = props.findIndex(p => p.id === currentPropertyId);
+  if (idx < props.length - 1) switchProperty(props[idx + 1].id);
+}
+
+// ═══════════════ SETTINGS (shared across years) ═══════════════
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem('yc_settings_' + currentPropertyId) || 'null'); } catch { return null; }
+}
+function saveSettingsToStorage(s) { localStorage.setItem('yc_settings_' + currentPropertyId, JSON.stringify(s)); }
+
+function defaultSettings() {
+  return {
+    startYear: 115,
+    purchasePrice: 0,
+    loanAmount: 0,
+    loanStartYear: 115,
+    loanStartMonth: 1,
+    annualRate: 0,
+    loanYears: 0,
+    costItems: [],
+    rooms: [
+      { id: '房間1', defaultRent: 0 },
+      { id: '房間2', defaultRent: 0 },
+      { id: '房間3', defaultRent: 0 },
+    ]
+  };
+}
+
+let settings = null;
+
+// ═══════════════ YEAR DATA ═══════════════
+
+function yearKey(y) { return 'yc_months_' + currentPropertyId + '_' + y; }
+
+function loadYearData(y) {
+  try { return JSON.parse(localStorage.getItem(yearKey(y)) || 'null') || {}; } catch { return {}; }
+}
+function saveYearData(y, d) { localStorage.setItem(yearKey(y), JSON.stringify(d)); }
+
+// ═══════════════ MORTGAGE CALCULATION ═══════════════
+
+function getMonthlyRate() {
+  return (settings.annualRate || 3.475) / 100 / 12;
+}
+
+function calcEstimatedPayment() {
+  const r = getMonthlyRate();
+  const P = settings.loanAmount || 0;
+  const n = (settings.loanYears || 30) * 12;
+  if (!P || !r) return 0;
+  return Math.round(P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1));
+}
+
+function getMortgageForMonth(year, month) {
+  const r = getMonthlyRate();
+  const L = settings.loanAmount || 0;
+  const M = calcEstimatedPayment();
+  const lsy = settings.loanStartYear || START_YEAR;
+  const lsm = settings.loanStartMonth || 1;
+  const offset = (year - lsy) * 12 + (month - lsm); // 0-indexed from 貸款起算年月
+  // Remaining balance before this payment
+  const balance = L * Math.pow(1 + r, offset) - (r > 0 ? M * (Math.pow(1 + r, offset) - 1) / r : M * offset);
+  const interest = Math.round(balance * r);
+  const principal = M - interest;
+  return { principal: Math.max(0, principal), interest: Math.max(0, interest) };
+}
+
+// ═══════════════ YEAR/STATE ═══════════════
+
+let currentYear = 115;
+let currentMonth = 1;
+let yearData = {}; // months for current year
+let _draft = null;
+let _itemCounter = 200;
+function uid() { return ++_itemCounter; }
+
+function changeYear(delta) {
+  const newYear = currentYear + delta;
+  if (newYear < 110 || newYear > 130) { toast('超出可用年份範圍'); return; }
+  currentYear = newYear;
+  yearData = loadYearData(currentYear);
+  _draft = null;
+  document.getElementById('yearDisplay').textContent = '民國 ' + currentYear + ' 年';
+  checkBeforeStartYear();
+  renderMonthNav();
+  renderMonthlyForm();
+  renderCostItems();
+  updateCostCalc();
+  if (document.getElementById('tab-annual').classList.contains('active')) renderAnnual();
+  updateAnnualTitle();
+  toast('切換至民國 ' + currentYear + ' 年');
+}
+
+function checkBeforeStartYear() {
+  const sy = settings.startYear || START_YEAR;
+  const banner = document.getElementById('beforeStartBanner');
+  const content = document.getElementById('mainContent');
+  if (currentYear < sy) {
+    banner.style.display = 'block';
+    banner.textContent = `民國 ${currentYear} 年尚未購入，無資料`;
+    if (content) content.style.display = 'none';
+  } else {
+    banner.style.display = 'none';
+    if (content) content.style.display = '';
+  }
+}
+
+function updateAnnualTitle() {
+  const el = document.getElementById('annualTitle');
+  if (el) el.textContent = ' 民國 ' + currentYear + ' 年 年度總覽';
+}
+
+// ═══════════════ TABS ═══════════════
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'annual') renderAnnual();
+}
+
+// ═══════════════ COST TAB ═══════════════
+
+function renderCostTab() {
+  document.getElementById('startYear').value = settings.startYear || START_YEAR;
+  document.getElementById('purchasePrice').value = settings.purchasePrice;
+  document.getElementById('loanAmount').value = settings.loanAmount;
+  document.getElementById('loanStartYear').value = settings.loanStartYear || START_YEAR;
+  document.getElementById('loanStartMonth').value = settings.loanStartMonth || 1;
+  document.getElementById('annualRate').value = settings.annualRate ?? 3.475;
+  document.getElementById('loanYears').value = settings.loanYears ?? 30;
+  updateCostCalc();
+  renderCostItems();
+  renderRoomConfig();
+}
+
+function updateCostCalc() {
+  const pp = +document.getElementById('purchasePrice').value || 0;
+  const la = +document.getElementById('loanAmount').value || 0;
+  const own = pp - la;
+  const costSum = settings.costItems.filter(i => !i.year || i.year <= currentYear).reduce((s, i) => s + (i.amount || 0), 0);
+  document.getElementById('ownCash').textContent = fmt(own);
+  document.getElementById('totalCostDisplay').textContent = fmt(own + costSum);
+  const est = calcEstimatedPayment();
+  document.getElementById('estimatedPaymentDisplay').textContent = est ? fmt(est) + ' 元' : '—';
+}
+
+function renderCostItems() {
+  const list = document.getElementById('costItemList');
+  list.innerHTML = '';
+  settings.costItems.filter(i => !i.year || i.year <= currentYear).forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <input class="item-name" type="text" value="${esc(item.name)}" placeholder="費用名稱" oninput="updCostItem(${item.id},'name',this.value)">
+      <input class="item-amt" type="number" value="${item.amount}" placeholder="金額" oninput="updCostItem(${item.id},'amount',parseFloat(this.value)||0)">
+      <span class="unit">元</span>
+      <span style="font-size:13px;color:var(--text-muted);flex-shrink:0;">民國</span>
+      <input style="width:60px;flex:none;text-align:center;" type="number" value="${item.year || START_YEAR}" placeholder="年" oninput="updCostItem(${item.id},'year',parseInt(this.value)||${START_YEAR})">
+      <span style="font-size:13px;color:var(--text-muted);flex-shrink:0;">年</span>
+      <button class="btn-del" onclick="delCostItem(${item.id})">×</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function addCostItem() { settings.costItems.push({ id: uid(), name: '', amount: 0, year: currentYear }); renderCostItems(); updateCostCalc(); }
+function delCostItem(id) { settings.costItems = settings.costItems.filter(i => i.id !== id); renderCostItems(); updateCostCalc(); }
+function updCostItem(id, key, val) { const i = settings.costItems.find(x => x.id === id); if (i) { i[key] = val; updateCostCalc(); } }
+
+function renderRoomConfig() {
+  const list = document.getElementById('roomConfigBody');
+  list.innerHTML = '';
+  settings.rooms.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
+      <input class="item-name" type="text" value="${esc(r.id)}" placeholder="房間名稱" oninput="updRoomName('${r.id}', this.value, this)">
+      <input class="item-amt" type="number" value="${r.defaultRent}" placeholder="月租基準" oninput="updRoom('${r.id}', parseFloat(this.value)||0)">
+      <span class="unit">元</span>
+      <button class="btn-del" onclick="delRoom('${r.id}')">×</button>`;
+    list.appendChild(row);
+  });
+}
+function updRoom(id, val) { const r = settings.rooms.find(x => x.id === id); if (r) r.defaultRent = val; }
+function updRoomName(oldId, newName, input) {
+  const r = settings.rooms.find(x => x.id === oldId);
+  if (!r) return;
+  r.id = newName;
+  const row = input.closest('.item-row');
+  row.querySelectorAll('[oninput]').forEach(el => {
+    el.setAttribute('oninput', el.getAttribute('oninput').replace(`'${oldId}'`, `'${newName}'`));
+  });
+  row.querySelector('.btn-del').setAttribute('onclick', `delRoom('${newName}')`);
+}
+function addRoom() {
+  const id = '房間' + (settings.rooms.length + 1);
+  settings.rooms.push({ id, defaultRent: 0 });
+  renderRoomConfig();
+}
+function delRoom(id) {
+  if (settings.rooms.length <= 1) { toast('至少需要一個房間'); return; }
+  settings.rooms = settings.rooms.filter(r => r.id !== id);
+  renderRoomConfig();
+}
+
+function saveSettings() {
+  settings.startYear = +document.getElementById('startYear').value || START_YEAR;
+  settings.loanStartYear = +document.getElementById('loanStartYear').value || START_YEAR;
+  settings.loanStartMonth = +document.getElementById('loanStartMonth').value || 1;
+  settings.annualRate = +document.getElementById('annualRate').value || 3.475;
+  settings.loanYears = +document.getElementById('loanYears').value || 30;
+  updateCostCalc();
+}
+
+function saveCostSettings() {
+  settings.startYear = +document.getElementById('startYear').value || START_YEAR;
+  settings.purchasePrice = +document.getElementById('purchasePrice').value || 0;
+  settings.loanAmount = +document.getElementById('loanAmount').value || 0;
+  saveSettings();
+  saveSettingsToStorage(settings);
+  toast('成本設定已儲存 ');
+  updateCostCalc();
+  saveToCloud();
+}
+
+// ═══════════════ MONTHLY TAB ═══════════════
+
+function renderMonthNav() {
+  const nav = document.getElementById('monthNav');
+  nav.innerHTML = '';
+  for (let m = 1; m <= 12; m++) {
+    const hasData = !!(yearData[m]);
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (m === currentMonth ? ' active' : '') + (hasData ? ' has-data' : '');
+    btn.textContent = m + '月';
+    btn.onclick = () => selectMonth(m);
+    nav.appendChild(btn);
+  }
+}
+
+function selectMonth(m) {
+  currentMonth = m;
+  _draft = null;
+  renderMonthNav();
+  renderMonthlyForm();
+}
+
+function getBlankMonth(m) {
+  const mort = getMortgageForMonth(currentYear, m);
+  return {
+    mortgageInterest: mort.interest,
+    mortgagePrincipal: mort.principal,
+    income: {
+      rooms: settings.rooms.map(r => ({ id: r.id, rent: r.defaultRent, electricity: 0, vacant: false })),
+      petFee: 0, petFeeNote: '', penalty: 0, penaltyNote: '', otherItems: []
+    },
+    fixedExpenses: { items: [] },
+    variableExpenses: { water: 0, waterNote: '', elec: 0, elecNote: '', items: [] }
+  };
+}
+
+function renderMonthlyForm() {
+  const md = yearData[currentMonth] ? JSON.parse(JSON.stringify(yearData[currentMonth])) : getBlankMonth(currentMonth);
+  const mort = getMortgageForMonth(currentYear, currentMonth);
+
+  document.getElementById('m-interest').value = md.mortgageInterest ?? mort.interest;
+  document.getElementById('m-principal').value = md.mortgagePrincipal ?? mort.principal;
+  document.getElementById('hint-interest').textContent = '參考值：' + fmt(mort.interest) + ' 元';
+  document.getElementById('hint-principal').textContent = '參考值：' + fmt(mort.principal) + ' 元';
+
+
+  // Rooms
+  const tbody = document.getElementById('roomIncomeBody');
+  tbody.innerHTML = '';
+  const rooms = md.income.rooms || settings.rooms.map(r => ({ id: r.id, rent: r.defaultRent, electricity: 0, vacant: false }));
+  rooms.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="room-name">${r.id}</td>
+      <td><input type="number" id="rent-${r.id}" value="${r.vacant ? 0 : r.rent}" ${r.vacant ? 'disabled' : ''} oninput="calcMonthly()"></td>
+      <td><input type="number" class="elec-input" id="elec-${r.id}" value="${r.electricity || 0}" oninput="calcMonthly()"></td>
+      <td><button class="vacant-toggle${r.vacant ? ' vacant' : ''}" id="vac-${r.id}" onclick="toggleVacant('${r.id}')">${r.vacant ? '空房' : '出租'}</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('i-petFee').value = md.income.petFee || 0;
+  document.getElementById('i-petFee-note').value = md.income.petFeeNote || '';
+  document.getElementById('i-penalty').value = md.income.penalty || 0;
+  document.getElementById('i-penalty-note').value = md.income.penaltyNote || '';
+  document.getElementById('e-water').value = md.variableExpenses.water || 0;
+  document.getElementById('e-water-note').value = md.variableExpenses.waterNote || '';
+  document.getElementById('e-elec').value = md.variableExpenses.elec || 0;
+  document.getElementById('e-elec-note').value = md.variableExpenses.elecNote || '';
+  ['i-petFee-note','i-penalty-note','e-water-note','e-elec-note'].forEach(id => {
+    const inp = document.getElementById(id);
+    inp.classList.toggle('show', !!(inp && inp.value.trim()));
+    syncNoteBtn(id, 'btn-' + id);
+  });
+  renderDynList('incomeOtherList', md.income.otherItems);
+  renderDynList('fixedExpList', md.fixedExpenses.items);
+  renderDynList('varExpList', md.variableExpenses.items);
+
+  // Summary title
+  document.getElementById('summaryTitle').textContent = ` 民國 ${currentYear} 年 ${currentMonth} 月 計算結果`;
+
+  calcMonthly();
+}
+
+function toggleNote(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if (!inp) return;
+  inp.classList.toggle('show');
+  if (inp.classList.contains('show')) inp.focus();
+  syncNoteBtn(inputId, btnId);
+}
+
+function syncNoteBtn(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
+  if (!inp || !btn) return;
+  if (inp.value.trim()) btn.classList.add('has-note');
+  else btn.classList.remove('has-note');
+}
+
+function showNoteIfFilled(inputId, btnId) {
+  const inp = document.getElementById(inputId);
+  if (inp && inp.value.trim()) {
+    inp.classList.add('show');
+    syncNoteBtn(inputId, btnId);
+  }
+}
+
+function toggleVacant(id) {
+  const btn = document.getElementById('vac-' + id);
+  const inp = document.getElementById('rent-' + id);
+  const isVacant = btn.classList.contains('vacant');
+  if (isVacant) {
+    btn.classList.remove('vacant'); btn.textContent = '出租';
+    inp.disabled = false;
+    const r = settings.rooms.find(x => x.id === id);
+    inp.value = r ? r.defaultRent : 0;
+  } else {
+    btn.classList.add('vacant'); btn.textContent = '空房';
+    inp.disabled = true; inp.value = 0;
+  }
+  calcMonthly();
+}
+
+// Dynamic lists
+function renderDynList(containerId, items) {
+  const list = document.getElementById(containerId);
+  list.innerHTML = '';
+  (items || []).forEach(item => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="item-row">
+        <input class="item-name" type="text" value="${esc(item.name)}" placeholder="項目名稱" oninput="updDyn('${containerId}',${item.id},'name',this.value)">
+        <input class="item-amt" type="number" value="${item.amount}" placeholder="金額" oninput="updDyn('${containerId}',${item.id},'amount',parseFloat(this.value)||0)">
+        <span class="unit">元</span>
+        <div class="btn-note-wrap"><button class="btn-note${item.note ? ' has-note' : ''}" id="btn-dyn-${item.id}" onclick="toggleNote('dyn-note-${item.id}','btn-dyn-${item.id}')">備注</button><input class="note-input${item.note ? ' show' : ''}" type="text" id="dyn-note-${item.id}" value="${esc(item.note||'')}" placeholder="備注" oninput="updDyn('${containerId}',${item.id},'note',this.value);syncNoteBtn('dyn-note-${item.id}','btn-dyn-${item.id}')"></div>
+        <button class="btn-del" onclick="delDyn('${containerId}',${item.id})">×</button>
+      </div>
+    `;
+    list.appendChild(wrap);
+  });
+}
+
+function getDraft() {
+  if (!_draft) _draft = yearData[currentMonth] ? JSON.parse(JSON.stringify(yearData[currentMonth])) : getBlankMonth(currentMonth);
+  return _draft;
+}
+function listFor(d, containerId) {
+  if (containerId === 'incomeOtherList') return d.income.otherItems;
+  if (containerId === 'fixedExpList')    return d.fixedExpenses.items;
+  return d.variableExpenses.items;
+}
+function addDynItem(containerId) {
+  const d = getDraft();
+  listFor(d, containerId).push({ id: uid(), name: '', amount: 0, note: '' });
+  renderDynList(containerId, listFor(d, containerId));
+}
+function updDyn(containerId, id, key, val) {
+  const d = getDraft();
+  const item = listFor(d, containerId).find(i => i.id === id);
+  if (item) { item[key] = val; calcMonthly(); }
+}
+function delDyn(containerId, id) {
+  const d = getDraft();
+  const arr = listFor(d, containerId);
+  const idx = arr.findIndex(i => i.id === id);
+  if (idx >= 0) arr.splice(idx, 1);
+  renderDynList(containerId, arr);
+  calcMonthly();
+}
+
+function collectForm() {
+  const d = getDraft();
+  d.mortgageInterest = parseFloat(document.getElementById('m-interest').value) || 0;
+  d.mortgagePrincipal = parseFloat(document.getElementById('m-principal').value) || 0;
+  d.income.rooms = settings.rooms.map(r => {
+    const vac = document.getElementById('vac-' + r.id)?.classList.contains('vacant') || false;
+    return {
+      id: r.id,
+      rent: parseFloat(document.getElementById('rent-' + r.id)?.value) || 0,
+      electricity: parseFloat(document.getElementById('elec-' + r.id)?.value) || 0,
+      vacant: vac
+    };
+  });
+  d.income.petFee = parseFloat(document.getElementById('i-petFee').value) || 0;
+  d.income.petFeeNote = document.getElementById('i-petFee-note').value;
+  d.income.penalty = parseFloat(document.getElementById('i-penalty').value) || 0;
+  d.income.penaltyNote = document.getElementById('i-penalty-note').value;
+  d.variableExpenses.water = parseFloat(document.getElementById('e-water').value) || 0;
+  d.variableExpenses.waterNote = document.getElementById('e-water-note').value;
+  d.variableExpenses.elec = parseFloat(document.getElementById('e-elec').value) || 0;
+  d.variableExpenses.elecNote = document.getElementById('e-elec-note').value;
+  return d;
+}
+
+// ── Net income for a saved month object ──
+function netForMonth(md) {
+  const roomInc = (md.income.rooms || []).reduce((s, r) => s + (r.vacant ? 0 : r.rent) + (r.electricity || 0), 0);
+  const othInc  = (md.income.otherItems || []).reduce((s, i) => s + (i.amount || 0), 0);
+  const totalIn = roomInc + (md.income.petFee || 0) + (md.income.penalty || 0) + othInc;
+  const fixExp  = (md.fixedExpenses.items || []).reduce((s, i) => s + (i.amount || 0), 0);
+  const varExp  = (md.variableExpenses.items || []).reduce((s, i) => s + (i.amount || 0), 0);
+  const totalEx = fixExp + varExp + (md.variableExpenses.water || 0) + (md.variableExpenses.elec || 0);
+  return { totalIn, totalEx, net: totalIn - totalEx - (md.mortgageInterest || 0), principal: md.mortgagePrincipal || 0 };
+}
+
+// ── Cumulative net from all years up to (and including) current month of currentYear ──
+function fullRentEstimate(year, month) {
+  const fullRent = settings.rooms.reduce((s, r) => s + r.defaultRent, 0);
+  const { interest } = getMortgageForMonth(year, month);
+  return fullRent - interest;
+}
+
+function calcCumNet(curMonthNet) {
+  let cum = 0;
+  // 歷年：已填用實際，未填用估算
+  for (let y = START_YEAR; y < currentYear; y++) {
+    const yd = loadYearData(y);
+    for (let m = 1; m <= 12; m++) {
+      if (yd[m]) cum += netForMonth(yd[m]).net;
+      else cum += fullRentEstimate(y, m);
+    }
+  }
+  // 當年：當月前，已填用實際，未填用滿租估算
+  for (let m = 1; m < currentMonth; m++) {
+    if (yearData[m]) cum += netForMonth(yearData[m]).net;
+    else cum += fullRentEstimate(currentYear, m);
+  }
+  // 當月即時值（目前表單填寫的數字）
+  cum += curMonthNet;
+  return cum;
+}
+
+function calcEstReturn(curMonth, curNet) {
+  const fullRent = settings.rooms.reduce((s, r) => s + r.defaultRent, 0);
+  let total = 0;
+  // 過去月份（已填用實際，未填用估算）
+  for (let m = 1; m < curMonth; m++) {
+    if (yearData[m]) total += netForMonth(yearData[m]).net;
+    else total += fullRentEstimate(currentYear, m);
+  }
+  // 當月
+  total += curNet;
+  // 未來月份（估算）
+  for (let m = curMonth + 1; m <= 12; m++) {
+    total += fullRentEstimate(currentYear, m);
+  }
+  const totalCost = getTotalCost(currentYear);
+  if (totalCost <= 0) return 0;
+  return total / totalCost;
+}
+
+function getTotalCost(year) {
+  const y = year || currentYear;
+  const own = (settings.purchasePrice || 0) - (settings.loanAmount || 0);
+  const items = (settings.costItems || [])
+    .filter(i => !i.year || i.year <= y)
+    .reduce((s, i) => s + (i.amount || 0), 0);
+  // 歷年累積利息（已填月份的實際利息）
+  let totalInterest = 0;
+  for (let yr = START_YEAR; yr <= y; yr++) {
+    const yd = (yr === currentYear) ? yearData : loadYearData(yr);
+    for (let m = 1; m <= 12; m++) {
+      if (yd[m]) totalInterest += yd[m].mortgageInterest || 0;
+    }
+  }
+  return own + items + totalInterest;
+}
+
+function calcMonthly() {
+  const d = collectForm();
+  const interest = d.mortgageInterest || 0;
+  const principal = d.mortgagePrincipal || 0;
+  document.getElementById('m-mortgageTotal').textContent = fmt(interest + principal);
+
+  const { totalIn, totalEx, net } = netForMonth(d);
+  const cf = totalIn - (totalEx + interest + principal);
+  const cum = calcCumNet(net);
+  const estRet = calcEstReturn(currentMonth, net);
+
+  document.getElementById('s-totalIncome').textContent = fmt(totalIn);
+  document.getElementById('s-totalExpense').textContent = fmt(totalEx + interest + principal);
+  document.getElementById('s-netIncome').textContent = fmt(net);
+  document.getElementById('s-cashflow').textContent = fmt(cf);
+  document.getElementById('s-cumNet').textContent = fmt(cum);
+  document.getElementById('s-estReturn').textContent = (estRet * 100).toFixed(2) + '%';
+
+  [['s-netIncome',net],['s-cashflow',cf],['s-cumNet',cum],['s-estReturn',estRet]].forEach(([id,val]) => {
+    const el = document.getElementById(id);
+    el.classList.remove('green','red','yellow');
+    el.classList.add(val < 0 ? 'red' : 'green');
+  });
+
+}
+
+function saveMonthlyData() {
+  const d = collectForm();
+  yearData[currentMonth] = JSON.parse(JSON.stringify(d));
+  saveYearData(currentYear, yearData);
+  _draft = null;
+  renderMonthNav();
+  toast(`民國 ${currentYear} 年 ${currentMonth} 月資料已儲存 `);
+  saveToCloud();
+}
+
+// ═══════════════ ANNUAL TAB ═══════════════
+
+function renderAnnual() {
+  updateAnnualTitle();
+  const tbody = document.getElementById('annualBody');
+  tbody.innerHTML = '';
+
+  // Previous years carryover
+  let prevCum = 0;
+  for (let y = START_YEAR; y < currentYear; y++) {
+    const yd = loadYearData(y);
+    for (let m = 1; m <= 12; m++) if (yd[m]) prevCum += netForMonth(yd[m]).net;
+  }
+
+  let cumNet = prevCum;
+  let yearInc = 0, yearExpNoMort = 0, yearInterest = 0, yearPrincipal = 0;
+
+  for (let m = 1; m <= 12; m++) {
+    const md = yearData[m];
+    if (!md) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${m}月</td><td colspan="7" style="text-align:center;color:var(--text-muted);font-size:12px;">（未填入）</td>`;
+      tbody.appendChild(tr);
+      continue;
+    }
+    const { totalIn, totalEx, net, principal } = netForMonth(md);
+    const interest = md.mortgageInterest || 0;
+    const cf = net - principal;
+    cumNet += net;
+    yearInc += totalIn; yearExpNoMort += totalEx; yearInterest += interest; yearPrincipal += principal;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${m}月</td>
+      <td class="num pos">${fmt(totalIn)}</td>
+      <td class="num neg">${fmt(totalEx)}</td>
+      <td class="num neg">${fmt(interest)}</td>
+      <td class="num neg">${fmt(principal)}</td>
+      <td class="num ${net>=0?'pos':'neg'}">${fmt(net)}</td>
+      <td class="num ${cf>=0?'pos':'neg'}">${fmt(cf)}</td>
+      <td class="num ${cumNet>=0?'pos':'neg'}">${fmt(cumNet)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  const yearNet = yearInc - yearExpNoMort - yearInterest;
+  const yearCF  = yearNet - yearPrincipal;
+  const ttr = document.createElement('tr');
+  ttr.className = 'total-row';
+  ttr.innerHTML = `<td>全年</td><td class="num">${fmt(yearInc)}</td><td class="num">${fmt(yearExpNoMort)}</td><td class="num">${fmt(yearInterest)}</td><td class="num">${fmt(yearPrincipal)}</td><td class="num">${fmt(yearNet)}</td><td class="num">${fmt(yearCF)}</td><td class="num">${fmt(cumNet)}</td>`;
+  tbody.appendChild(ttr);
+
+  document.getElementById('a-totalIncome').textContent = fmt(yearInc);
+  document.getElementById('a-totalExpense').textContent = fmt(yearExpNoMort + yearInterest + yearPrincipal);
+  document.getElementById('a-netIncome').textContent = fmt(yearNet);
+  document.getElementById('a-cashflow').textContent = fmt(yearCF);
+
+  // 年度收益：已填用實際，未填用滿租估算
+  let estTotal = 0;
+  for (let m = 1; m <= 12; m++) {
+    if (yearData[m]) estTotal += netForMonth(yearData[m]).net;
+    else estTotal += fullRentEstimate(currentYear, m);
+  }
+  const tc = getTotalCost(currentYear);
+  const estRet = tc > 0 ? estTotal / tc : 0;
+  document.getElementById('a-estReturn').textContent = (estRet * 100).toFixed(2) + '%';
+
+  const pp = settings.purchasePrice || 0;
+  const la = settings.loanAmount || 0;
+  const ci = (settings.costItems || []).filter(i => !i.year || i.year <= currentYear).reduce((s, i) => s + (i.amount || 0), 0);
+  document.getElementById('a-purchasePrice').textContent = fmt(pp);
+  document.getElementById('a-loanAmount').textContent = fmt(la);
+  document.getElementById('a-ownCash').textContent = fmt(pp - la);
+  document.getElementById('a-costItems').textContent = fmt(ci);
+  document.getElementById('a-totalCost').textContent = fmt((pp - la) + ci);
+}
+
+// ═══════════════ UTILS ═══════════════
+
+function fmt(n) { if (isNaN(n) || n == null) return '0'; return Math.round(n).toLocaleString('zh-TW'); }
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function colorize(id, val) {
+  const el = document.getElementById(id);
+  el.classList.remove('green','red','yellow');
+  el.classList.add(val > 0 ? 'green' : val < 0 ? 'red' : 'yellow');
+}
+function resetAllData() {
+  if (!confirm('確定清除所有資料？此操作無法復原。')) return;
+  Object.keys(localStorage).filter(k => k.startsWith('yc_')).forEach(k => localStorage.removeItem(k));
+  location.reload();
+}
+
+// ═══════════════ 雲端同步 ═══════════════
+
+const API_URL = 'https://script.google.com/macros/s/AKfycbxavMX6UBimFejh32XLUHlxB9imwmqzJK_XRSzKMsHv1cnELw_AZqew6VMu5XobFH0/exec';
+
+function syncStatus(state) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const map = { saving: '️ 同步中…', ok: '️ 已同步', err: '️ 同步失敗' };
+  const col = { saving: '#8A95A0', ok: '#7B9E87', err: '#B85C5C' };
+  el.textContent = map[state]; el.style.color = col[state];
+}
+
+function collectAllData() {
+  const d = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('yc_')) d[k] = localStorage.getItem(k);
+  }
+  return d;
+}
+
+async function saveToCloud() {
+  syncStatus('saving');
+  try {
+    await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(collectAllData()) });
+    syncStatus('ok');
+  } catch(e) { syncStatus('err'); }
+}
+
+async function loadFromCloud() {
+  try {
+    const r = await fetch(API_URL + '?t=' + Date.now());
+    const text = await r.text();
+    if (!text || text === '{}') return false;
+    const data = JSON.parse(text);
+    if (typeof data !== 'object') return false;
+    Object.entries(data).forEach(([k, v]) => { if (k.startsWith('yc_')) localStorage.setItem(k, v); });
+    return true;
+  } catch(e) { return false; }
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ═══════════════ INIT ═══════════════
+
+window.addEventListener('DOMContentLoaded', async () => {
+  checkLogin();
+  syncStatus('saving');
+  await loadFromCloud();
+
+  const props = getProperties();
+  if (!loadPropertiesStore()) savePropertiesStore(props);
+  const savedId = localStorage.getItem('yc_current_prop');
+  currentPropertyId = (savedId && props.find(p => p.id === savedId)) ? savedId : props[0].id;
+  renderPropSelector();
+
+  settings = loadSettings() || defaultSettings();
+  yearData = loadYearData(currentYear);
+  checkBeforeStartYear();
+  renderCostTab();
+  renderMonthNav();
+  selectMonth(new Date().getMonth() + 1);
+  syncStatus('ok');
+  updateAnnualTitle();
+});
+</script>
+</body>
+</html>
