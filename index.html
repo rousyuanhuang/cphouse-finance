@@ -81,14 +81,14 @@
 
   /* ── Dynamic Lists ── */
   .item-list { display: flex; flex-direction: column; gap: 8px; }
-  .item-row { display: flex; align-items: center; gap: 6px; }
-  .item-row input.item-name { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 17px; background: transparent; color: var(--text-muted); }
+  .item-row { display: flex; align-items: center; gap: 6px; width: 100%; }
+  .item-row input.item-name { flex: 1; min-width: 0; max-width: 16.66%; padding: 6px 6px; border: 1px solid transparent; border-radius: 8px; font-size: 13px; background: transparent; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .item-row input.item-name:hover { border-color: var(--border); background: #fff; }
   .item-row input.item-name:focus { border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
-  .item-row input.item-amt { width: 90px; max-width: 90px; flex: none; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; text-align: right; background: #fff; }
+  .item-row input.item-amt { flex: 1; min-width: 0; max-width: 16.66%; padding: 6px 6px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; text-align: right; background: #fff; }
   .item-row input.item-amt:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
   .item-row input:focus { outline: none; border-color: var(--primary-light); }
-  .btn-note-wrap { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+  .btn-note-wrap { flex: 4; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; }
   .btn-note { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 7px; font-size: 12px; cursor: pointer; transition: .15s; white-space: nowrap; flex-shrink: 0; }
   .btn-note:hover, .btn-note.has-note { border-color: var(--primary-light); color: var(--primary); background: #f0f4f8; }
   .note-input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--primary-light); border-radius: 7px; font-size: 15px; background: #fff; display: none; }
