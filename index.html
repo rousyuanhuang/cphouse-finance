@@ -57,7 +57,7 @@
   /* ── Forms ── */
   .field-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .field-row label { font-size: 17px; color: var(--text-muted); flex: 1; min-width: 0; }
-  .field-row input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 17px; background: #fff; min-width: 0; }
+  .field-row input { width: 90px; max-width: 90px; flex: none; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; text-align: right; background: #fff; min-width: 0; }
   .field-row input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
   .field-row .unit { font-size: 17px; color: var(--text-muted); flex-shrink: 0; }
   .field-row .calc { font-size: 17px; color: var(--primary); font-weight: 600; }
@@ -82,10 +82,10 @@
   /* ── Dynamic Lists ── */
   .item-list { display: flex; flex-direction: column; gap: 8px; }
   .item-row { display: flex; align-items: center; gap: 6px; }
-  .item-row input.item-name, .item-row textarea.item-name { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 15px; background: transparent; color: var(--text-muted); resize: none; overflow: hidden; line-height: 1.4; font-family: inherit; }
-  .item-row input.item-name:hover, .item-row textarea.item-name:hover { border-color: var(--border); background: #fff; }
-  .item-row input.item-name:focus, .item-row textarea.item-name:focus { border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 3px rgba(123,158,135,.2); outline: none; }
-  .item-row input.item-amt { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 17px; text-align: left; background: #fff; }
+  .item-row input.item-name { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 17px; background: transparent; color: var(--text-muted); }
+  .item-row input.item-name:hover { border-color: var(--border); background: #fff; }
+  .item-row input.item-name:focus { border-color: var(--primary-light); background: #fff; box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
+  .item-row input.item-amt { width: 90px; max-width: 90px; flex: none; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; text-align: right; background: #fff; }
   .item-row input.item-amt:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(123,158,135,.2); }
   .item-row input:focus { outline: none; border-color: var(--primary-light); }
   .btn-note-wrap { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; }
@@ -363,7 +363,7 @@
         <div class="value green num" id="s-totalIncome">0</div>
       </div>
       <div class="summary-item">
-        <div class="label">本月總支出（含利息+本金）</div>
+        <div class="label">本月總支出（支出+利息+本金）</div>
         <div class="value red num" id="s-totalExpense">0</div>
       </div>
       <div class="summary-item">
@@ -371,7 +371,7 @@
         <div class="value green num" id="s-netIncome">0</div>
       </div>
       <div class="summary-item">
-        <div class="label">本月現金流（淨收入－本金）</div>
+        <div class="label">本月現金流（總收入－總支出）</div>
         <div class="value green num" id="s-cashflow">0</div>
       </div>
       <div class="summary-item">
@@ -1002,7 +1002,7 @@ function renderDynList(containerId, items) {
     const wrap = document.createElement('div');
     wrap.innerHTML = `
       <div class="item-row">
-        <textarea class="item-name" rows="1" placeholder="項目名稱" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updDyn('${containerId}',${item.id},'name',this.value)">${esc(item.name)}</textarea>
+        <input class="item-name" type="text" value="${esc(item.name)}" placeholder="項目名稱" oninput="updDyn('${containerId}',${item.id},'name',this.value)">
         <input class="item-amt" type="number" value="${item.amount}" placeholder="金額" oninput="updDyn('${containerId}',${item.id},'amount',parseFloat(this.value)||0)">
         <span class="unit">元</span>
         <div class="btn-note-wrap"><button class="btn-note${item.note ? ' has-note' : ''}" id="btn-dyn-${item.id}" onclick="toggleNote('dyn-note-${item.id}','btn-dyn-${item.id}')">備注</button><input class="note-input${item.note ? ' show' : ''}" type="text" id="dyn-note-${item.id}" value="${esc(item.note||'')}" placeholder="備注" oninput="updDyn('${containerId}',${item.id},'note',this.value);syncNoteBtn('dyn-note-${item.id}','btn-dyn-${item.id}')"></div>
