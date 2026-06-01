@@ -221,6 +221,14 @@
   }
   .login-btn:hover { opacity: .88; }
   .login-err { color: var(--danger); font-size: 13px; display: none; }
+
+/* ── 統計列 ── */
+.stat-row-wrap { margin: 10px 0 4px; border-top: 1px solid var(--border); padding-top: 8px; }
+.stat-row { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 3px 4px; font-size: 14px; }
+.stat-row.total { font-weight: 700; font-size: 15px; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 6px; }
+.stat-label { color: var(--text-muted); flex: 1; text-align: right; }
+.stat-value { min-width: 80px; text-align: right; }
+.stat-unit { color: var(--text-muted); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -355,7 +363,7 @@
         <div class="value green num" id="s-totalIncome">0</div>
       </div>
       <div class="summary-item">
-        <div class="label">本月總支出（支出+利息+本金）</div>
+        <div class="label">本月總支出（含利息+本金）</div>
         <div class="value red num" id="s-totalExpense">0</div>
       </div>
       <div class="summary-item">
@@ -363,7 +371,7 @@
         <div class="value green num" id="s-netIncome">0</div>
       </div>
       <div class="summary-item">
-        <div class="label">本月現金流（總收入－總支出）</div>
+        <div class="label">本月現金流（淨收入－本金）</div>
         <div class="value green num" id="s-cashflow">0</div>
       </div>
       <div class="summary-item">
@@ -402,6 +410,10 @@
       <thead><tr><th>房間</th><th>租金</th><th>電費</th><th>狀態</th></tr></thead>
       <tbody id="roomIncomeBody"></tbody>
     </table>
+    <div class="stat-row-wrap">
+      <div class="stat-row"><span class="stat-label">租金合計</span><span class="stat-value green num" id="s-rentTotal">0</span><span class="stat-unit">元</span></div>
+      <div class="stat-row"><span class="stat-label">電費合計</span><span class="stat-value green num" id="s-elecTotal">0</span><span class="stat-unit">元</span></div>
+    </div>
     <hr class="divider">
     <div class="field-row">
       <label>寵物清潔費</label>
@@ -419,6 +431,9 @@
     <div class="card-title" style="font-size:13px;margin-bottom:8px;">其他收入</div>
     <div class="item-list" id="incomeOtherList"></div>
     <button class="btn-add" onclick="addDynItem('incomeOtherList')">＋ 新增其他收入</button>
+    <div class="stat-row-wrap">
+      <div class="stat-row total"><span class="stat-label">總收入</span><span class="stat-value green num" id="s-incomeTotal">0</span><span class="stat-unit">元</span></div>
+    </div>
   </div>
 
   <!-- 固定支出 -->
@@ -426,6 +441,9 @@
     <div class="card-title">▪ 固定支出（不含房貸）</div>
     <div class="item-list" id="fixedExpList"></div>
     <button class="btn-add" onclick="addDynItem('fixedExpList')">＋ 新增固定支出</button>
+    <div class="stat-row-wrap">
+      <div class="stat-row total"><span class="stat-label">固定支出合計</span><span class="stat-value red num" id="s-fixedTotal">0</span><span class="stat-unit">元</span></div>
+    </div>
   </div>
 
   <!-- 變動支出 -->
@@ -443,10 +461,18 @@
       <span class="unit">元</span>
       <div class="btn-note-wrap"><button class="btn-note" id="btn-e-elec-note" onclick="toggleNote('e-elec-note','btn-e-elec-note')">備注</button><input class="note-input" type="text" id="e-elec-note" placeholder="備注" oninput="syncNoteBtn('e-elec-note','btn-e-elec-note')"></div>
     </div>
+    <div class="stat-row-wrap" style="margin-top:6px;">
+      <div class="stat-row"><span class="stat-label">電費收入</span><span class="stat-value green num" id="s-elecIncome">0</span><span class="stat-unit">元</span></div>
+      <div class="stat-row"><span class="stat-label">電費支出</span><span class="stat-value red num" id="s-elecExpense">0</span><span class="stat-unit">元</span></div>
+      <div class="stat-row total"><span class="stat-label">電費盈虧</span><span class="stat-value num" id="s-elecProfit">0</span><span class="stat-unit">元</span></div>
+    </div>
     <hr class="divider">
     <div class="card-title" style="font-size:13px;margin-bottom:8px;">其他變動支出</div>
     <div class="item-list" id="varExpList"></div>
     <button class="btn-add" onclick="addDynItem('varExpList')">＋ 新增變動支出</button>
+    <div class="stat-row-wrap">
+      <div class="stat-row total"><span class="stat-label">變動支出合計</span><span class="stat-value red num" id="s-varTotal">0</span><span class="stat-unit">元</span></div>
+    </div>
   </div>
 
   <button class="btn-primary btn-save" onclick="saveMonthlyData()"> 儲存本月資料</button>
@@ -458,7 +484,7 @@
     <div class="title" id="annualTitle">▪ 年度總覽</div>
     <div class="summary-grid">
       <div class="summary-item"><div class="label">年度總收入</div><div class="value green num" id="a-totalIncome">0</div></div>
-      <div class="summary-item"><div class="label">年度總支出（含利息+本金）</div><div class="value red num" id="a-totalExpense">0</div></div>
+      <div class="summary-item"><div class="label">年度總支出（支出+利息+本金）</div><div class="value red num" id="a-totalExpense">0</div></div>
       <div class="summary-item"><div class="label">年度淨收入</div><div class="value yellow num" id="a-netIncome">0</div></div>
       <div class="summary-item"><div class="label">年度現金流</div><div class="value yellow num" id="a-cashflow">0</div></div>
       <div class="summary-item full"><div class="label">年度收益</div><div class="value yellow num" id="a-estReturn">0.00%</div></div>
@@ -1118,6 +1144,34 @@ function calcMonthly() {
   const interest = d.mortgageInterest || 0;
   const principal = d.mortgagePrincipal || 0;
   document.getElementById('m-mortgageTotal').textContent = fmt(interest + principal);
+
+  // 收入細項統計
+  const rentTotal = (d.income.rooms || []).reduce((s, r) => s + (r.vacant ? 0 : (r.rent || 0)), 0);
+  const elecTotal = (d.income.rooms || []).reduce((s, r) => s + (r.electricity || 0), 0);
+  const incomeTotal = rentTotal + elecTotal + (d.income.petFee || 0) + (d.income.penalty || 0) + (d.income.otherItems || []).reduce((s,i) => s+(i.amount||0), 0);
+  document.getElementById('s-rentTotal').textContent = fmt(rentTotal);
+  document.getElementById('s-elecTotal').textContent = fmt(elecTotal);
+  document.getElementById('s-incomeTotal').textContent = fmt(incomeTotal);
+
+  // 電費盈虧
+  const elecIncome = (d.income.rooms || []).reduce((s, r) => s + (r.electricity || 0), 0);
+  const elecExpense = d.variableExpenses.elec || 0;
+  const elecProfit = elecIncome - elecExpense;
+  document.getElementById('s-elecIncome').textContent = fmt(elecIncome);
+  document.getElementById('s-elecExpense').textContent = fmt(elecExpense);
+  const elecProfitEl = document.getElementById('s-elecProfit');
+  elecProfitEl.textContent = fmt(elecProfit);
+  elecProfitEl.classList.remove('green','red');
+  elecProfitEl.classList.add(elecProfit >= 0 ? 'green' : 'red');
+
+  // 固定支出統計
+  const fixedTotal = (d.fixedExpenses.items || []).reduce((s, i) => s + (i.amount || 0), 0);
+  document.getElementById('s-fixedTotal').textContent = fmt(fixedTotal);
+
+  // 變動支出統計
+  const varTotal = (d.variableExpenses.items || []).reduce((s, i) => s + (i.amount || 0), 0)
+    + (d.variableExpenses.water || 0) + (d.variableExpenses.elec || 0);
+  document.getElementById('s-varTotal').textContent = fmt(varTotal);
 
   const { totalIn, totalEx, net } = netForMonth(d);
   const cf = totalIn - (totalEx + interest + principal);
