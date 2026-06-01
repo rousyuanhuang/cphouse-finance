@@ -175,7 +175,10 @@
 
   /* ── 檢視模式 ── */
   .view-banner { background: #7B9E87; color: #fff; text-align: center; padding: 7px; font-size: 17px; font-weight: 600; letter-spacing: .5px; }
-  body.view-mode input, body.view-mode select { pointer-events: none; background: transparent !important; border-color: transparent !important; box-shadow: none !important; color: var(--text); }
+  body.view-mode input, body.view-mode select, body.view-mode textarea { pointer-events: none; background: transparent !important; border-color: transparent !important; box-shadow: none !important; color: var(--text); }
+  body.view-mode .btn-note { display: none !important; }
+  body.view-mode .note-input { display: none !important; }
+  body.view-mode .note-input.show { display: block !important; pointer-events: none; border-color: transparent !important; background: transparent !important; color: var(--text-muted); padding-left: 0; }
   body.view-mode .btn-add, body.view-mode .btn-del, body.view-mode .btn-primary, body.view-mode .btn-save, body.view-mode .prop-add-btn, body.view-mode .prop-del-btn, body.view-mode .prop-nav-btn { display: none !important; }
   body.view-mode .vacant-toggle { pointer-events: none; cursor: default; }
   body.view-mode .prop-bar select { pointer-events: auto; }
