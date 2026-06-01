@@ -91,7 +91,7 @@
   .btn-note-wrap { flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 6px; }
   .btn-note { background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; padding: 3px 7px; font-size: 12px; cursor: pointer; transition: .15s; white-space: nowrap; flex-shrink: 0; }
   .btn-note:hover, .btn-note.has-note { border-color: var(--primary-light); color: var(--primary); background: #f0f4f8; }
-  .note-input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--primary-light); border-radius: 7px; font-size: 15px; background: #fff; display: none; word-break: break-all; overflow-wrap: break-word; white-space: pre-wrap; }
+  .note-input { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--primary-light); border-radius: 7px; font-size: 15px; background: #fff; display: none; word-break: break-all; overflow-wrap: break-word; white-space: pre-wrap; resize: none; font-family: inherit; line-height: 1.4; }
   .note-input.show { display: block; }
   .field-row input[type="number"] { flex: 1; min-width: 0; text-align: right; }
   #i-petFee, #i-penalty, #e-water, #e-elec { text-align: left; }
@@ -419,13 +419,13 @@
       <label>寵物清潔費</label>
       <input type="number" id="i-petFee" value="0" oninput="calcMonthly()">
       <span class="unit">元</span>
-      <div class="btn-note-wrap"><button class="btn-note" id="btn-i-petFee-note" onclick="toggleNote('i-petFee-note','btn-i-petFee-note')">備注</button><input class="note-input" type="text" id="i-petFee-note" placeholder="如：房號" oninput="syncNoteBtn('i-petFee-note','btn-i-petFee-note')"></div>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-i-petFee-note" onclick="toggleNote('i-petFee-note','btn-i-petFee-note')">備注</button><textarea class="note-input" id="i-petFee-note" placeholder="如：房號" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';syncNoteBtn('i-petFee-note','btn-i-petFee-note')"></textarea></div>
     </div>
     <div class="field-row">
       <label>違約金</label>
       <input type="number" id="i-penalty" value="0" oninput="calcMonthly()">
       <span class="unit">元</span>
-      <div class="btn-note-wrap"><button class="btn-note" id="btn-i-penalty-note" onclick="toggleNote('i-penalty-note','btn-i-penalty-note')">備注</button><input class="note-input" type="text" id="i-penalty-note" placeholder="如：房號" oninput="syncNoteBtn('i-penalty-note','btn-i-penalty-note')"></div>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-i-penalty-note" onclick="toggleNote('i-penalty-note','btn-i-penalty-note')">備注</button><textarea class="note-input" id="i-penalty-note" placeholder="如：房號" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';syncNoteBtn('i-penalty-note','btn-i-penalty-note')"></textarea></div>
     </div>
     <hr class="divider">
     <div class="card-title" style="font-size:13px;margin-bottom:8px;">其他收入</div>
@@ -453,13 +453,13 @@
       <label>水費</label>
       <input type="number" id="e-water" value="0" oninput="calcMonthly()">
       <span class="unit">元</span>
-      <div class="btn-note-wrap"><button class="btn-note" id="btn-e-water-note" onclick="toggleNote('e-water-note','btn-e-water-note')">備注</button><input class="note-input" type="text" id="e-water-note" placeholder="備注" oninput="syncNoteBtn('e-water-note','btn-e-water-note')"></div>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-e-water-note" onclick="toggleNote('e-water-note','btn-e-water-note')">備注</button><textarea class="note-input" id="e-water-note" placeholder="備注" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';syncNoteBtn('e-water-note','btn-e-water-note')"></textarea></div>
     </div>
     <div class="field-row">
       <label>電費</label>
       <input type="number" id="e-elec" value="0" oninput="calcMonthly()">
       <span class="unit">元</span>
-      <div class="btn-note-wrap"><button class="btn-note" id="btn-e-elec-note" onclick="toggleNote('e-elec-note','btn-e-elec-note')">備注</button><input class="note-input" type="text" id="e-elec-note" placeholder="備注" oninput="syncNoteBtn('e-elec-note','btn-e-elec-note')"></div>
+      <div class="btn-note-wrap"><button class="btn-note" id="btn-e-elec-note" onclick="toggleNote('e-elec-note','btn-e-elec-note')">備注</button><textarea class="note-input" id="e-elec-note" placeholder="備注" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';syncNoteBtn('e-elec-note','btn-e-elec-note')"></textarea></div>
     </div>
     <div class="stat-row-wrap" style="margin-top:6px;">
       <div class="stat-row"><span class="stat-label">電費收入</span><span class="stat-value green num" id="s-elecIncome">0</span><span class="stat-unit">元</span></div>
@@ -1005,7 +1005,7 @@ function renderDynList(containerId, items) {
         <textarea class="item-name" rows="1" placeholder="項目名稱" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updDyn('${containerId}',${item.id},'name',this.value)">${esc(item.name)}</textarea>
         <input class="item-amt" type="number" value="${item.amount}" placeholder="金額" oninput="updDyn('${containerId}',${item.id},'amount',parseFloat(this.value)||0)">
         <span class="unit">元</span>
-        <div class="btn-note-wrap"><button class="btn-note${item.note ? ' has-note' : ''}" id="btn-dyn-${item.id}" onclick="toggleNote('dyn-note-${item.id}','btn-dyn-${item.id}')">備注</button><input class="note-input${item.note ? ' show' : ''}" type="text" id="dyn-note-${item.id}" value="${esc(item.note||'')}" placeholder="備注" oninput="updDyn('${containerId}',${item.id},'note',this.value);syncNoteBtn('dyn-note-${item.id}','btn-dyn-${item.id}')"></div>
+        <div class="btn-note-wrap"><button class="btn-note${item.note ? ' has-note' : ''}" id="btn-dyn-${item.id}" onclick="toggleNote('dyn-note-${item.id}','btn-dyn-${item.id}')">備注</button><textarea class="note-input${item.note ? ' show' : ''}" id="dyn-note-${item.id}" placeholder="備注" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';updDyn('${containerId}',${item.id},'note',this.value);syncNoteBtn('dyn-note-${item.id}','btn-dyn-${item.id}')">${esc(item.note||'')}</textarea></div>
         <button class="btn-del" onclick="delDyn('${containerId}',${item.id})">×</button>
       </div>
     `;
