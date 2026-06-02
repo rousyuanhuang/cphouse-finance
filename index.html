@@ -1163,7 +1163,7 @@ function netForMonth(md) {
 
 // ── Cumulative net from all years up to (and including) current month of currentYear ──
 function fullRentEstimate(year, month) {
-  const fullRent = settings.rooms.reduce((s, r) => s + r.defaultRent, 0);
+  const fullRent = settings.rooms.reduce((s, r) => s + getRentForYear(r.id, year), 0);
   const { interest } = getMortgageForMonth(year, month);
   return fullRent - interest;
 }
@@ -1189,7 +1189,7 @@ function calcCumNet(curMonthNet) {
 }
 
 function calcEstReturn(curMonth, curNet) {
-  const fullRent = settings.rooms.reduce((s, r) => s + r.defaultRent, 0);
+  const fullRent = settings.rooms.reduce((s, r) => s + getRentForYear(r.id, currentYear), 0);
   let total = 0;
   // 過去月份（已填用實際，未填用估算）
   for (let m = 1; m < curMonth; m++) {
