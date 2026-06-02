@@ -348,13 +348,21 @@
     <div class="card-title">▪ 房間設定</div>
     <div class="item-list" id="roomConfigBody"></div>
     <button class="btn-add" onclick="addRoom()">＋ 新增房間</button>
+    <div class="stat-row-wrap">
+      <div class="stat-row total"><span class="stat-label">預設租金合計</span><span class="stat-value green num" id="roomRentTotal">0</span><span class="stat-unit">元</span></div>
+    </div>
   </div>
 
   <div class="card">
-    <div class="card-title">▪ 歷年租金紀錄</div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">未填寫年度自動沿用房間設定的預設租金</div>
-    <div id="yearRentBody"></div>
-    <button class="btn-add" onclick="addYearRent()">＋ 新增年度租金</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleYearRent()">
+      <div class="card-title" style="margin-bottom:0;">▪ 歷年租金紀錄</div>
+      <span id="yearRentToggleIcon" style="font-size:18px;color:var(--primary);">▾</span>
+    </div>
+    <div id="yearRentCollapse">
+      <div style="font-size:13px;color:var(--text-muted);margin:10px 0;">未填寫年度自動沿用房間設定的預設租金</div>
+      <div id="yearRentBody"></div>
+      <button class="btn-add" onclick="addYearRent()">＋ 新增年度租金</button>
+    </div>
   </div>
 
   <button class="btn-primary btn-save" onclick="saveCostSettings()"> 儲存成本設定</button>
@@ -804,6 +812,7 @@ function renderCostTab() {
   renderCostItems();
   renderRoomConfig();
   renderYearRent();
+  updateRoomRentTotal();
 }
 
 function updateCostCalc() {
@@ -854,7 +863,17 @@ function renderRoomConfig() {
     list.appendChild(row);
   });
 }
-function updRoom(id, val) { const r = settings.rooms.find(x => x.id === id); if (r) r.defaultRent = val; }
+function updRoom(id, val) {
+  const r = settings.rooms.find(x => x.id === id);
+  if (r) r.defaultRent = val;
+  updateRoomRentTotal();
+}
+
+function updateRoomRentTotal() {
+  const total = (settings.rooms || []).reduce((s, r) => s + (r.defaultRent || 0), 0);
+  const el = document.getElementById('roomRentTotal');
+  if (el) el.textContent = total.toLocaleString();
+}
 
 function renderYearRent() {
   const body = document.getElementById('yearRentBody');
@@ -872,6 +891,10 @@ function renderYearRent() {
         <span style="font-size:13px;color:var(--text-muted);">元</span>
       </div>`;
     }).join('');
+    const yearTotal = (settings.rooms || []).reduce((s, r) => {
+      const v = (yr.rents && yr.rents[r.id] !== undefined) ? yr.rents[r.id] : r.defaultRent;
+      return s + (v || 0);
+    }, 0);
     section.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
         <span style="font-size:13px;color:var(--text-muted);">民國</span>
@@ -880,6 +903,11 @@ function renderYearRent() {
         <button class="btn-del" style="margin-left:auto;" onclick="delYearRent(${idx})">×</button>
       </div>
       ${roomRows}
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;border-top:1px solid var(--border);margin-top:8px;padding-top:6px;">
+        <span style="font-size:13px;color:var(--text-muted);">租金合計</span>
+        <span style="font-size:15px;font-weight:700;color:var(--accent);">${yearTotal.toLocaleString()}</span>
+        <span style="font-size:13px;color:var(--text-muted);">元</span>
+      </div>
     `;
     body.appendChild(section);
   });
@@ -1036,6 +1064,19 @@ function renderMonthlyForm() {
   document.getElementById('summaryTitle').textContent = ` 民國 ${currentYear} 年 ${currentMonth} 月 計算結果`;
 
   calcMonthly();
+}
+
+function toggleYearRent() {
+  const collapse = document.getElementById('yearRentCollapse');
+  const icon = document.getElementById('yearRentToggleIcon');
+  if (!collapse) return;
+  if (collapse.style.display === 'none') {
+    collapse.style.display = 'block';
+    icon.textContent = '▾';
+  } else {
+    collapse.style.display = 'none';
+    icon.textContent = '▸';
+  }
 }
 
 function toggleNote(inputId, btnId) {
