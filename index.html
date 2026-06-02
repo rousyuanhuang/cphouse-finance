@@ -1170,7 +1170,12 @@ function getBlankMonth(m) {
     mortgageInterest: mort.interest,
     mortgagePrincipal: mort.principal,
     income: {
-      rooms: settings.rooms.map(r => ({ id: r.id, rent: r.defaultRent, electricity: 0, vacant: false })),
+      rooms: settings.rooms.map(r => {
+        const contract = getContractForMonth(r.id, currentYear, m);
+        const cycle = contract ? (contract.cycle || 'monthly') : 'monthly';
+        const rent = (cycle !== 'monthly' && contract) ? (contract.rent || 0) : 0;
+        return { id: r.id, rent, electricity: 0, vacant: false };
+      }),
       petFee: 0, petFeeNote: '', penalty: 0, penaltyNote: '', otherItems: []
     },
     fixedExpenses: { items: [] },
@@ -1191,7 +1196,12 @@ function renderMonthlyForm() {
   // Rooms
   const tbody = document.getElementById('roomIncomeBody');
   tbody.innerHTML = '';
-  const rooms = md.income.rooms || settings.rooms.map(r => ({ id: r.id, rent: r.defaultRent, electricity: 0, vacant: false }));
+  const rooms = md.income.rooms || settings.rooms.map(r => {
+    const contract = getContractForMonth(r.id, currentYear, currentMonth);
+    const cycle = contract ? (contract.cycle || 'monthly') : 'monthly';
+    const rent = (cycle !== 'monthly' && contract) ? (contract.rent || 0) : 0;
+    return { id: r.id, rent, electricity: 0, vacant: false };
+  });
   rooms.forEach(r => {
     const tr = document.createElement('tr');
     const rs = settings.rooms.find(s => s.id === r.id) || {};
