@@ -180,6 +180,7 @@
   body.view-mode .note-input { display: none !important; }
   body.view-mode .note-input.show { display: block !important; pointer-events: none; border-color: transparent !important; background: transparent !important; color: var(--text-muted); padding-left: 0; }
   body.view-mode .btn-add, body.view-mode .btn-del, body.view-mode .btn-primary, body.view-mode .btn-save, body.view-mode .prop-add-btn, body.view-mode .prop-del-btn, body.view-mode .prop-nav-btn { display: none !important; }
+  body.view-mode #ownerAccountsCard { display: none !important; }
   body.view-mode .vacant-toggle { pointer-events: none; cursor: default; }
   body.view-mode .prop-bar select { pointer-events: auto; }
 
@@ -284,6 +285,18 @@
 <div id="tab-cost" class="tab-content active">
   <div class="info-note">※ 成本設定為全年共用，所有年份皆適用。</div>
 
+  <div class="card" id="ownerAccountsCard">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleOwnerAccounts()">
+      <div class="card-title" style="margin-bottom:0;">▪ 業主帳號管理</div>
+      <span id="ownerAccountsIcon" style="font-size:18px;color:var(--primary);">▸</span>
+    </div>
+    <div id="ownerAccountsCollapse" style="display:none;">
+      <div style="font-size:13px;color:var(--text-muted);margin:10px 0;">每個業主各自有獨立密碼，登入後只能看到自己的資料</div>
+      <div id="ownerAccountsList"></div>
+      <button class="btn-add" onclick="addOwnerAccount()">＋ 新增業主帳號</button>
+    </div>
+  </div>
+
   <div class="card cost">
     <div class="card-title">▪ 房屋基本資訊</div>
     <div class="field-row" style="margin-bottom:14px;">
@@ -356,9 +369,9 @@
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleYearRent()">
       <div class="card-title" style="margin-bottom:0;">▪ 歷年租金紀錄</div>
-      <span id="yearRentToggleIcon" style="font-size:18px;color:var(--primary);">▾</span>
+      <span id="yearRentToggleIcon" style="font-size:18px;color:var(--primary);">▸</span>
     </div>
-    <div id="yearRentCollapse">
+    <div id="yearRentCollapse" style="display:none;">
       <div style="font-size:13px;color:var(--text-muted);margin:10px 0;">未填寫年度自動沿用房間設定的預設租金</div>
       <div id="yearRentBody"></div>
       <button class="btn-add" onclick="addYearRent()">＋ 新增年度租金</button>
@@ -568,17 +581,45 @@ function doLogin() {
   const pwd = document.getElementById('loginPwd').value.trim();
   if (pwd === EDITOR_PWD) {
     sessionStorage.setItem('cp_role', 'editor');
+    sessionStorage.removeItem('cp_owner_prop');
     document.getElementById('loginScreen').style.display = 'none';
-  } else if (pwd === VIEWER_PWD) {
-    sessionStorage.setItem('cp_role', 'viewer');
-    document.getElementById('loginScreen').style.display = 'none';
-    document.body.classList.add('view-mode');
-    document.getElementById('viewBanner').style.display = 'block';
   } else {
-    const err = document.getElementById('loginErr');
-    err.style.display = 'block';
-    document.getElementById('loginPwd').value = '';
-    setTimeout(() => err.style.display = 'none', 2500);
+    // 檢查業主帳號
+    const accounts = getOwnerAccounts();
+    const account = accounts.find(a => a.active && a.pwd === pwd);
+    if (account) {
+      sessionStorage.setItem('cp_role', 'viewer');
+      const propIds = Array.isArray(account.propIds) ? account.propIds : (account.propId ? [account.propId] : []);
+      sessionStorage.setItem('cp_owner_props', JSON.stringify(propIds));
+      document.getElementById('loginScreen').style.display = 'none';
+      document.body.classList.add('view-mode');
+      document.getElementById('viewBanner').style.display = 'block';
+      if (propIds.length > 0) {
+        setTimeout(() => {
+          // 如果只有一個業主，直接切換且隱藏選單
+          if (propIds.length === 1) {
+            switchProperty(propIds[0]);
+            const propBar = document.getElementById('propBar');
+            if (propBar) propBar.style.display = 'none';
+          } else {
+            // 多個業主：只顯示有權限的選項
+            switchProperty(propIds[0]);
+            filterPropSelect(propIds);
+          }
+        }, 100);
+      }
+    } else if (pwd === VIEWER_PWD) {
+      sessionStorage.setItem('cp_role', 'viewer');
+      sessionStorage.removeItem('cp_owner_prop');
+      document.getElementById('loginScreen').style.display = 'none';
+      document.body.classList.add('view-mode');
+      document.getElementById('viewBanner').style.display = 'block';
+    } else {
+      const err = document.getElementById('loginErr');
+      err.style.display = 'block';
+      document.getElementById('loginPwd').value = '';
+      setTimeout(() => err.style.display = 'none', 2500);
+    }
   }
 }
 
@@ -590,8 +631,21 @@ function checkLogin() {
     document.getElementById('loginScreen').style.display = 'none';
     document.body.classList.add('view-mode');
     document.getElementById('viewBanner').style.display = 'block';
+    const ownerPropsStr = sessionStorage.getItem('cp_owner_props');
+    if (ownerPropsStr) {
+      const propIds = JSON.parse(ownerPropsStr || '[]');
+      setTimeout(() => {
+        if (propIds.length === 1) {
+          switchProperty(propIds[0]);
+          const propBar = document.getElementById('propBar');
+          if (propBar) propBar.style.display = 'none';
+        } else if (propIds.length > 1) {
+          switchProperty(propIds[0]);
+          filterPropSelect(propIds);
+        }
+      }, 300);
+    }
   }
-  // else: 顯示登入畫面（預設）
 }
 
 // ── 檢視模式（URL 參數，保留相容性）──
@@ -813,6 +867,7 @@ function renderCostTab() {
   renderRoomConfig();
   renderYearRent();
   updateRoomRentTotal();
+  renderOwnerAccounts();
 }
 
 function updateCostCalc() {
@@ -1064,6 +1119,110 @@ function renderMonthlyForm() {
   document.getElementById('summaryTitle').textContent = ` 民國 ${currentYear} 年 ${currentMonth} 月 計算結果`;
 
   calcMonthly();
+}
+
+function getOwnerAccounts() {
+  try { return JSON.parse(localStorage.getItem('yc_owner_accounts') || '[]'); } catch { return []; }
+}
+
+function saveOwnerAccounts(accounts) {
+  localStorage.setItem('yc_owner_accounts', JSON.stringify(accounts));
+}
+
+function renderOwnerAccounts() {
+  const list = document.getElementById('ownerAccountsList');
+  if (!list) return;
+  const accounts = getOwnerAccounts();
+  const props = loadPropertiesStore() || [];
+  list.innerHTML = '';
+  accounts.forEach((acc, idx) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border);flex-wrap:wrap;';
+    const selectedProps = Array.isArray(acc.propIds) ? acc.propIds : (acc.propId ? [acc.propId] : []);
+    const propCheckboxes = props.map(p => `<label style="display:flex;align-items:center;gap:4px;padding:2px 0;cursor:pointer;font-size:13px;"><input type="checkbox" value="${p.id}" ${selectedProps.includes(p.id) ? 'checked' : ''} onchange="updOwnerPropIds(${idx},this)"> ${p.name || p.id}</label>`).join('');
+    row.innerHTML = `
+      <input type="text" value="${acc.name || ''}" placeholder="業主名稱" style="flex:1;min-width:80px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:15px;background:#fff;" oninput="updOwnerAccount(${idx},'name',this.value)">
+      <input type="text" value="${acc.pwd || ''}" placeholder="密碼" style="width:90px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:15px;background:#fff;" oninput="updOwnerAccount(${idx},'pwd',this.value)">
+      <div style="flex:1;min-width:120px;">
+        <div onclick="togglePropCollapse(this)" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:14px;background:#fff;cursor:pointer;">
+          <span style="color:var(--text-muted);">${selectedProps.length > 0 ? selectedProps.length + ' 個物件' : '選擇物件'}</span>
+          <span style="font-size:12px;color:var(--primary);">▾</span>
+        </div>
+        <div class="prop-collapse" style="display:none;padding:6px 10px;border:1px solid var(--border);border-top:none;border-radius:0 0 7px 7px;background:#fff;max-height:120px;overflow-y:auto;">
+          ${propCheckboxes}
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text-muted);cursor:pointer;">
+        <input type="checkbox" ${acc.active ? 'checked' : ''} onchange="updOwnerAccount(${idx},'active',this.checked)"> 啟用
+      </label>
+      <button class="btn-del" onclick="delOwnerAccount(${idx})">×</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function updOwnerPropIds(idx, checkbox) {
+  const accounts = getOwnerAccounts();
+  if (!Array.isArray(accounts[idx].propIds)) accounts[idx].propIds = [];
+  if (checkbox.checked) {
+    if (!accounts[idx].propIds.includes(checkbox.value)) accounts[idx].propIds.push(checkbox.value);
+  } else {
+    accounts[idx].propIds = accounts[idx].propIds.filter(id => id !== checkbox.value);
+  }
+  saveOwnerAccounts(accounts);
+}
+
+function filterPropSelect(allowedIds) {
+  const sel = document.getElementById('propSelect');
+  if (!sel) return;
+  Array.from(sel.options).forEach(opt => {
+    opt.style.display = allowedIds.includes(opt.value) ? '' : 'none';
+  });
+}
+
+function addOwnerAccount() {
+  const accounts = getOwnerAccounts();
+  accounts.push({ name: '', pwd: '', propId: '', active: true });
+  saveOwnerAccounts(accounts);
+  renderOwnerAccounts();
+}
+
+function updOwnerAccount(idx, key, val) {
+  const accounts = getOwnerAccounts();
+  accounts[idx][key] = val;
+  saveOwnerAccounts(accounts);
+}
+
+function delOwnerAccount(idx) {
+  const accounts = getOwnerAccounts();
+  accounts.splice(idx, 1);
+  saveOwnerAccounts(accounts);
+  renderOwnerAccounts();
+}
+
+function togglePropCollapse(header) {
+  const collapse = header.nextElementSibling;
+  const icon = header.querySelector('span:last-child');
+  if (collapse.style.display === 'none') {
+    collapse.style.display = 'block';
+    icon.textContent = '▴';
+  } else {
+    collapse.style.display = 'none';
+    icon.textContent = '▾';
+  }
+}
+
+function toggleOwnerAccounts() {
+  const collapse = document.getElementById('ownerAccountsCollapse');
+  const icon = document.getElementById('ownerAccountsIcon');
+  if (!collapse) return;
+  if (collapse.style.display === 'none') {
+    collapse.style.display = 'block';
+    icon.textContent = '▾';
+  } else {
+    collapse.style.display = 'none';
+    icon.textContent = '▸';
+  }
 }
 
 function toggleYearRent() {
