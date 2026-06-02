@@ -181,6 +181,7 @@
   body.view-mode .note-input.show { display: block !important; pointer-events: none; border-color: transparent !important; background: transparent !important; color: var(--text-muted); padding-left: 0; }
   body.view-mode .btn-add, body.view-mode .btn-del, body.view-mode .btn-primary, body.view-mode .btn-save, body.view-mode .prop-add-btn, body.view-mode .prop-del-btn, body.view-mode .prop-nav-btn { display: none !important; }
   body.view-mode #ownerAccountsCard { display: none !important; }
+  body.view-mode label:has(input[type="checkbox"]) { display: none !important; }
   body.view-mode .vacant-toggle { pointer-events: none; cursor: default; }
   body.view-mode .prop-bar select { pointer-events: auto; }
 
@@ -438,7 +439,7 @@
   <div class="card income">
     <div class="card-title">※ 收入</div>
     <table class="room-table">
-      <thead><tr><th>房間</th><th>租金</th><th>電費</th><th>狀態</th></tr></thead>
+      <thead><tr><th>房間</th><th></th><th>租金</th><th>電費</th><th></th><th>狀態</th></tr></thead>
       <tbody id="roomIncomeBody"></tbody>
     </table>
     <div class="stat-row-wrap">
@@ -915,15 +916,112 @@ function renderRoomConfig() {
   const list = document.getElementById('roomConfigBody');
   list.innerHTML = '';
   settings.rooms.forEach(r => {
+    const cid = 'cp_' + r.id;
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'margin-bottom:6px;';
+
+    // 主列：房號（可點擊）+ 金額 + 寵物
     const row = document.createElement('div');
     row.className = 'item-row';
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;';
     row.innerHTML = `
-      <input class="item-name" type="text" value="${esc(r.id)}" placeholder="房間名稱" oninput="updRoomName('${r.id}', this.value, this)">
-      <input class="item-amt" type="number" value="${r.defaultRent}" placeholder="月租基準" oninput="updRoom('${r.id}', parseFloat(this.value)||0)">
+      <input type="text" value="${r.id}" style="flex:1;min-width:0;padding:8px 10px;border:1px solid transparent;border-radius:8px;font-size:17px;background:transparent;color:var(--text-muted);cursor:pointer;" oninput="updRoomName('${r.id}',this.value,this)" onclick="event.stopPropagation()">
+      <span style="display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;font-size:11px;color:var(--primary);margin-right:4px;" onclick="toggleRoomPanel('${cid}')"><span id="icon_${cid}">▸</span></span>
+      <input class="item-amt" type="number" value="${r.defaultRent}" placeholder="預設月租" style="flex:1;text-align:center;" oninput="updRoom('${r.id}',parseFloat(this.value)||0)">
       <span class="unit">元</span>
+      <label style="display:flex;align-items:center;gap:2px;font-size:15px;cursor:pointer;"><input type="checkbox" ${r.hasCat?'checked':''} onchange="updRoomField('${r.id}','hasCat',this.checked)"> 🐱</label>
+      <label style="display:flex;align-items:center;gap:2px;font-size:15px;cursor:pointer;"><input type="checkbox" ${r.hasDog?'checked':''} onchange="updRoomField('${r.id}','hasDog',this.checked)"> 🐶</label>
       <button class="btn-del" onclick="delRoom('${r.id}')">×</button>`;
-    list.appendChild(row);
+    wrapper.appendChild(row);
+
+    // 展開面板：合約
+    const panel = document.createElement('div');
+    panel.id = cid;
+    panel.style.cssText = 'display:none;margin:4px 0 4px 44px;padding:8px;background:var(--bg);border-radius:8px;';
+    const contracts = r.contracts || [];
+    if (contracts.length === 0) {
+      panel.innerHTML = '<div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">尚無合約，點下方新增</div>';
+    }
+    contracts.forEach((c, ci) => {
+      const cRow = document.createElement('div');
+      cRow.style.cssText = 'display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;';
+      const inp = (val, w, key) => `<input type="number" value="${val}" style="width:${w}px;padding:4px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;background:#fff;" oninput="updContract('${r.id}',${ci},'${key}',+this.value)">`;
+      cRow.innerHTML = `
+        <span style="color:var(--text-muted);">民國</span>${inp(c.startYear||115,46,'startYear')}<span style="color:var(--text-muted);">年</span>${inp(c.startMonth||1,46,'startMonth')}<span style="color:var(--text-muted);">月 ～ 民國</span>${inp(c.endYear||115,46,'endYear')}<span style="color:var(--text-muted);">年</span>${inp(c.endMonth||12,46,'endMonth')}<span style="color:var(--text-muted);">月</span>
+        <input type="number" value="${c.rent||0}" style="width:75px;padding:4px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:right;background:#fff;" placeholder="租金" oninput="updContract('${r.id}',${ci},'rent',parseFloat(this.value)||0)">
+        <select style="padding:4px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;" onchange="updContract('${r.id}',${ci},'cycle',this.value)">
+          <option value="monthly" ${(c.cycle||'monthly')==='monthly'?'selected':''}>月繳</option>
+          <option value="quarterly" ${c.cycle==='quarterly'?'selected':''}>季繳</option>
+          <option value="biannual" ${c.cycle==='biannual'?'selected':''}>半年繳</option>
+          <option value="annual" ${c.cycle==='annual'?'selected':''}>年繳</option>
+        </select>
+        ${inp(c.cycleStart||1,46,'cycleStart')}<span style="color:var(--text-muted);">月起收</span>
+        <button class="btn-del" style="margin-left:auto;" onclick="delContract('${r.id}',${ci})">×</button>`;
+      panel.appendChild(cRow);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn-add';
+    addBtn.style.cssText = 'font-size:13px;padding:6px;margin-top:6px;width:100%;';
+    addBtn.textContent = '＋ 新增合約';
+    addBtn.onclick = () => addContract(r.id);
+    panel.appendChild(addBtn);
+    wrapper.appendChild(panel);
+    list.appendChild(wrapper);
   });
+  updateRoomRentTotal();
+}
+
+function toggleRoomPanel(cid) {
+  const panel = document.getElementById(cid);
+  const icon = document.getElementById('icon_' + cid);
+  if (!panel) return;
+  if (panel.style.display === 'none') { panel.style.display = 'block'; if(icon) icon.textContent = '▾'; }
+  else { panel.style.display = 'none'; if(icon) icon.textContent = '▸'; }
+}
+
+function updRoomField(id, key, val) {
+  const r = settings.rooms.find(x => x.id === id);
+  if (r) r[key] = val;
+}
+
+function addContract(roomId) {
+  const r = settings.rooms.find(x => x.id === roomId);
+  if (!r) return;
+  if (!r.contracts) r.contracts = [];
+  r.contracts.push({ startYear: currentYear, startMonth: 1, endYear: currentYear, endMonth: 12, rent: r.defaultRent, cycle: 'monthly', cycleStart: 1 });
+  renderRoomConfig();
+  const cid = 'cp_' + roomId;
+  const panel = document.getElementById(cid);
+  const icon = document.getElementById('icon_' + cid);
+  if (panel) { panel.style.display = 'block'; if(icon) icon.textContent = '▾'; }
+}
+
+function delContract(roomId, idx) {
+  const r = settings.rooms.find(x => x.id === roomId);
+  if (r && r.contracts) { r.contracts.splice(idx, 1); renderRoomConfig(); }
+}
+
+function updContract(roomId, idx, key, val) {
+  const r = settings.rooms.find(x => x.id === roomId);
+  if (r && r.contracts && r.contracts[idx]) r.contracts[idx][key] = val;
+}
+
+function getContractForMonth(roomId, year, month) {
+  const r = settings.rooms.find(x => x.id === roomId);
+  if (!r || !r.contracts || !r.contracts.length) return null;
+  const cur = year * 100 + month;
+  return r.contracts.find(c => cur >= (c.startYear*100+c.startMonth) && cur <= (c.endYear*100+c.endMonth)) || null;
+}
+
+function getRentCycleInfo(cycle, cycleStart, month) {
+  if (cycle === 'monthly') return { shouldCollect: false, label: '' };
+  const interval = { quarterly:3, biannual:6, annual:12 }[cycle] || 1;
+  const cols = [];
+  let m = cycleStart; while(m<=12){ cols.push(m); m+=interval; }
+  m = cycleStart-interval; while(m>=1){ cols.push(m); m-=interval; }
+  if (cols.includes(month)) return { shouldCollect: true, label: '💰' };
+  const next = cols.filter(x=>x>month).sort((a,b)=>a-b)[0] || cols.sort((a,b)=>a-b)[0];
+  return { shouldCollect: false, label: '' };
 }
 function updRoom(id, val) {
   const r = settings.rooms.find(x => x.id === id);
@@ -1096,10 +1194,20 @@ function renderMonthlyForm() {
   const rooms = md.income.rooms || settings.rooms.map(r => ({ id: r.id, rent: r.defaultRent, electricity: 0, vacant: false }));
   rooms.forEach(r => {
     const tr = document.createElement('tr');
+    const rs = settings.rooms.find(s => s.id === r.id) || {};
+    const contract = getContractForMonth(r.id, currentYear, currentMonth);
+    const cycle = contract ? (contract.cycle||'monthly') : 'monthly';
+    const cycleStart = contract ? (contract.cycleStart||1) : 1;
+    const cycleInfo = getRentCycleInfo(cycle, cycleStart, currentMonth);
+    const pets = (rs.hasCat?'🐱':'') + (rs.hasDog?'🐶':'');
+    const petBadge = pets ? `<span style="font-size:13px;">${pets}</span>` : '';
+    const remindBadge = (!r.vacant && cycleInfo.shouldCollect) ? '<span style="font-size:12px;color:var(--accent);font-weight:700;">本月收款</span>' : '';
     tr.innerHTML = `
-      <td class="room-name">${r.id}</td>
+      <td class="room-name" style="text-align:center;padding-left:0;white-space:nowrap;">${r.id}</td>
+      <td style="text-align:center;width:36px;">${petBadge}</td>
       <td><input type="number" id="rent-${r.id}" value="${r.vacant ? 0 : r.rent}" ${r.vacant ? 'disabled' : ''} oninput="calcMonthly()"></td>
       <td><input type="number" class="elec-input" id="elec-${r.id}" value="${r.electricity || 0}" oninput="calcMonthly()"></td>
+      <td style="text-align:center;width:60px;">${remindBadge}</td>
       <td><button class="vacant-toggle${r.vacant ? ' vacant' : ''}" id="vac-${r.id}" onclick="toggleVacant('${r.id}')">${r.vacant ? '空房' : '出租'}</button></td>
     `;
     tbody.appendChild(tr);
