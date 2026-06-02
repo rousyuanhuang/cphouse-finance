@@ -1199,8 +1199,8 @@ function renderMonthlyForm() {
     const cycle = contract ? (contract.cycle||'monthly') : 'monthly';
     const cycleStart = contract ? (contract.cycleStart||1) : 1;
     const cycleInfo = getRentCycleInfo(cycle, cycleStart, currentMonth);
-    const hasCat = contract ? (contract.hasCat||false) : (rs.hasCat||false);
-    const hasDog = contract ? (contract.hasDog||false) : (rs.hasDog||false);
+    const hasCat = contract ? (contract.hasCat||false) : false;
+    const hasDog = contract ? (contract.hasDog||false) : false;
     const pets = (hasCat?'🐱':'') + (hasDog?'🐶':'');
     const petBadge = pets ? `<span style="font-size:13px;">${pets}</span>` : '';
     const remindBadge = (!r.vacant && cycleInfo.shouldCollect) ? '<span style="font-size:12px;color:var(--accent);font-weight:700;">本月收款</span>' : '';
