@@ -929,8 +929,6 @@ function renderRoomConfig() {
       <span style="display:inline-flex;align-items:center;flex-shrink:0;cursor:pointer;font-size:11px;color:var(--primary);margin-right:4px;" onclick="toggleRoomPanel('${cid}')"><span id="icon_${cid}">▸</span></span>
       <input class="item-amt" type="number" value="${r.defaultRent}" placeholder="預設月租" style="flex:1;text-align:center;" oninput="updRoom('${r.id}',parseFloat(this.value)||0)">
       <span class="unit">元</span>
-      <label style="display:flex;align-items:center;gap:2px;font-size:15px;cursor:pointer;"><input type="checkbox" ${r.hasCat?'checked':''} onchange="updRoomField('${r.id}','hasCat',this.checked)"> 🐱</label>
-      <label style="display:flex;align-items:center;gap:2px;font-size:15px;cursor:pointer;"><input type="checkbox" ${r.hasDog?'checked':''} onchange="updRoomField('${r.id}','hasDog',this.checked)"> 🐶</label>
       <button class="btn-del" onclick="delRoom('${r.id}')">×</button>`;
     wrapper.appendChild(row);
 
@@ -956,6 +954,8 @@ function renderRoomConfig() {
           <option value="annual" ${c.cycle==='annual'?'selected':''}>年繳</option>
         </select>
         ${inp(c.cycleStart||1,46,'cycleStart')}<span style="color:var(--text-muted);">月起收</span>
+        <label style="display:flex;align-items:center;gap:2px;font-size:14px;cursor:pointer;"><input type="checkbox" ${c.hasCat?'checked':''} onchange="updContract('${r.id}',${ci},'hasCat',this.checked)"> 🐱</label>
+        <label style="display:flex;align-items:center;gap:2px;font-size:14px;cursor:pointer;"><input type="checkbox" ${c.hasDog?'checked':''} onchange="updContract('${r.id}',${ci},'hasDog',this.checked)"> 🐶</label>
         <button class="btn-del" style="margin-left:auto;" onclick="delContract('${r.id}',${ci})">×</button>`;
       panel.appendChild(cRow);
     });
@@ -1199,7 +1199,9 @@ function renderMonthlyForm() {
     const cycle = contract ? (contract.cycle||'monthly') : 'monthly';
     const cycleStart = contract ? (contract.cycleStart||1) : 1;
     const cycleInfo = getRentCycleInfo(cycle, cycleStart, currentMonth);
-    const pets = (rs.hasCat?'🐱':'') + (rs.hasDog?'🐶':'');
+    const hasCat = contract ? (contract.hasCat||false) : (rs.hasCat||false);
+    const hasDog = contract ? (contract.hasDog||false) : (rs.hasDog||false);
+    const pets = (hasCat?'🐱':'') + (hasDog?'🐶':'');
     const petBadge = pets ? `<span style="font-size:13px;">${pets}</span>` : '';
     const remindBadge = (!r.vacant && cycleInfo.shouldCollect) ? '<span style="font-size:12px;color:var(--accent);font-weight:700;">本月收款</span>' : '';
     tr.innerHTML = `
