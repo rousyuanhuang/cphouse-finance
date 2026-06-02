@@ -350,6 +350,13 @@
     <button class="btn-add" onclick="addRoom()">＋ 新增房間</button>
   </div>
 
+  <div class="card">
+    <div class="card-title">▪ 歷年租金紀錄</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">未填寫年度自動沿用房間設定的預設租金</div>
+    <div id="yearRentBody"></div>
+    <button class="btn-add" onclick="addYearRent()">＋ 新增年度租金</button>
+  </div>
+
   <button class="btn-primary btn-save" onclick="saveCostSettings()"> 儲存成本設定</button>
   <button class="btn-save" style="margin-top:8px;width:100%;padding:11px;border:1.5px solid var(--danger);background:none;color:var(--danger);border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;" onclick="resetAllData()"> 清除所有資料</button>
 </div>
@@ -796,6 +803,7 @@ function renderCostTab() {
   updateCostCalc();
   renderCostItems();
   renderRoomConfig();
+  renderYearRent();
 }
 
 function updateCostCalc() {
@@ -847,6 +855,64 @@ function renderRoomConfig() {
   });
 }
 function updRoom(id, val) { const r = settings.rooms.find(x => x.id === id); if (r) r.defaultRent = val; }
+
+function renderYearRent() {
+  const body = document.getElementById('yearRentBody');
+  if (!body) return;
+  body.innerHTML = '';
+  const yrs = settings.yearRents || [];
+  yrs.forEach((yr, idx) => {
+    const section = document.createElement('div');
+    section.style.cssText = 'margin-bottom:14px;padding:10px;background:var(--bg);border-radius:8px;';
+    let roomRows = (settings.rooms || []).map(r => {
+      const val = (yr.rents && yr.rents[r.id] !== undefined) ? yr.rents[r.id] : r.defaultRent;
+      return `<div class="field-row" style="margin-bottom:4px;">
+        <label style="font-size:14px;">${r.id}</label>
+        <input type="number" value="${val}" style="width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:15px;text-align:right;background:#fff;" oninput="updYearRent(${idx},'${r.id}',parseFloat(this.value)||0)">
+        <span style="font-size:13px;color:var(--text-muted);">元</span>
+      </div>`;
+    }).join('');
+    section.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:13px;color:var(--text-muted);">民國</span>
+        <input type="number" value="${yr.year}" style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:7px;font-size:15px;text-align:center;background:#fff;" oninput="updYearRentYear(${idx},parseInt(this.value)||115)">
+        <span style="font-size:13px;color:var(--text-muted);">年</span>
+        <button class="btn-del" style="margin-left:auto;" onclick="delYearRent(${idx})">×</button>
+      </div>
+      ${roomRows}
+    `;
+    body.appendChild(section);
+  });
+}
+
+function addYearRent() {
+  if (!settings.yearRents) settings.yearRents = [];
+  const defaultRents = {};
+  (settings.rooms || []).forEach(r => defaultRents[r.id] = r.defaultRent);
+  settings.yearRents.push({ year: currentYear, rents: defaultRents });
+  renderYearRent();
+}
+
+function delYearRent(idx) {
+  settings.yearRents.splice(idx, 1);
+  renderYearRent();
+}
+
+function updYearRent(idx, roomId, val) {
+  if (!settings.yearRents[idx].rents) settings.yearRents[idx].rents = {};
+  settings.yearRents[idx].rents[roomId] = val;
+}
+
+function updYearRentYear(idx, val) {
+  settings.yearRents[idx].year = val;
+}
+
+function getRentForYear(roomId, year) {
+  const yr = (settings.yearRents || []).find(y => y.year === year);
+  if (yr && yr.rents && yr.rents[roomId] !== undefined) return yr.rents[roomId];
+  const room = (settings.rooms || []).find(r => r.id === roomId);
+  return room ? room.defaultRent : 0;
+}
 function updRoomName(oldId, newName, input) {
   const r = settings.rooms.find(x => x.id === oldId);
   if (!r) return;
