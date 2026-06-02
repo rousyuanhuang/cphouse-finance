@@ -575,7 +575,6 @@ if ('serviceWorker' in navigator) {
 
 // ── 登入 ──
 const EDITOR_PWD = '6992';
-const VIEWER_PWD = '1785';
 
 function doLogin() {
   const pwd = document.getElementById('loginPwd').value.trim();
@@ -594,26 +593,20 @@ function doLogin() {
       document.getElementById('loginScreen').style.display = 'none';
       document.body.classList.add('view-mode');
       document.getElementById('viewBanner').style.display = 'block';
-      if (propIds.length > 0) {
-        setTimeout(() => {
-          // 如果只有一個業主，直接切換且隱藏選單
-          if (propIds.length === 1) {
-            switchProperty(propIds[0]);
-            const propBar = document.getElementById('propBar');
-            if (propBar) propBar.style.display = 'none';
-          } else {
-            // 多個業主：只顯示有權限的選項
-            switchProperty(propIds[0]);
-            filterPropSelect(propIds);
-          }
-        }, 100);
-      }
-    } else if (pwd === VIEWER_PWD) {
-      sessionStorage.setItem('cp_role', 'viewer');
-      sessionStorage.removeItem('cp_owner_prop');
-      document.getElementById('loginScreen').style.display = 'none';
-      document.body.classList.add('view-mode');
-      document.getElementById('viewBanner').style.display = 'block';
+      setTimeout(() => {
+        if (propIds.length === 0) {
+          // 沒有指定物件：隱藏所有物件，顯示空白
+          const propBar = document.getElementById('propBar');
+          if (propBar) propBar.style.display = 'none';
+        } else if (propIds.length === 1) {
+          switchProperty(propIds[0]);
+          const propBar = document.getElementById('propBar');
+          if (propBar) propBar.style.display = 'none';
+        } else {
+          switchProperty(propIds[0]);
+          filterPropSelect(propIds);
+        }
+      }, 100);
     } else {
       const err = document.getElementById('loginErr');
       err.style.display = 'block';
@@ -632,14 +625,17 @@ function checkLogin() {
     document.body.classList.add('view-mode');
     document.getElementById('viewBanner').style.display = 'block';
     const ownerPropsStr = sessionStorage.getItem('cp_owner_props');
-    if (ownerPropsStr) {
+    if (ownerPropsStr !== null) {
       const propIds = JSON.parse(ownerPropsStr || '[]');
       setTimeout(() => {
-        if (propIds.length === 1) {
+        if (propIds.length === 0) {
+          const propBar = document.getElementById('propBar');
+          if (propBar) propBar.style.display = 'none';
+        } else if (propIds.length === 1) {
           switchProperty(propIds[0]);
           const propBar = document.getElementById('propBar');
           if (propBar) propBar.style.display = 'none';
-        } else if (propIds.length > 1) {
+        } else {
           switchProperty(propIds[0]);
           filterPropSelect(propIds);
         }
@@ -670,13 +666,24 @@ function renderPropSelector() {
   const props = getProperties();
   const sel = document.getElementById('propSelect');
   sel.innerHTML = '';
+  // 取得業主帳號的物件限制
+  const ownerPropsStr = sessionStorage.getItem('cp_owner_props');
+  const allowedIds = ownerPropsStr !== null ? JSON.parse(ownerPropsStr || '[]') : null;
   props.forEach(p => {
+    // 如果有限制，只顯示允許的物件
+    if (allowedIds !== null && !allowedIds.includes(p.id)) return;
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.name;
     if (p.id === currentPropertyId) opt.selected = true;
     sel.appendChild(opt);
   });
+  // 只有一個物件時隱藏整個 propBar
+  if (allowedIds !== null) {
+    const propBar = document.getElementById('propBar');
+    if (allowedIds.length <= 1 && propBar) propBar.style.display = 'none';
+    document.querySelectorAll('.prop-nav-btn').forEach(btn => btn.style.display = 'none');
+  }
 }
 
 function switchProperty(id) {
@@ -1178,6 +1185,8 @@ function filterPropSelect(allowedIds) {
   Array.from(sel.options).forEach(opt => {
     opt.style.display = allowedIds.includes(opt.value) ? '' : 'none';
   });
+  // 隱藏左右切換箭頭，只保留下拉選單
+  document.querySelectorAll('.prop-nav-btn').forEach(btn => btn.style.display = 'none');
 }
 
 function addOwnerAccount() {
