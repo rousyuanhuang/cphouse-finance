@@ -1724,7 +1724,7 @@ function resetAllData() {
 
 // ═══════════════ 雲端同步 ═══════════════
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbxavMX6UBimFejh32XLUHlxB9imwmqzJK_XRSzKMsHv1cnELw_AZqew6VMu5XobFH0/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz7uwFDQ0nTpRCAzj8K18g2HVsQCAAUw-H_XbuwGCRdz_78AdtMDLa1zzcVWeZ2kWc/exec';
 
 function syncStatus(state) {
   const el = document.getElementById('syncStatus');
@@ -1745,28 +1745,10 @@ function collectAllData() {
 
 async function saveToCloud() {
   syncStatus('saving');
-  const ts = Date.now().toString();
-  localStorage.setItem('yc_last_saved', ts);
-  const data = collectAllData();
-  data.yc_last_saved = ts;
   try {
-    const r = await fetch(API_URL, {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-    const result = await r.json();
-    syncStatus(result.status === 'ok' ? 'ok' : 'err');
-    if (result.status !== 'ok') toast('同步失敗，資料已保存在本機');
-  } catch(e) {
-    // CORS 問題時 fallback 到 no-cors
-    try {
-      await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
-      syncStatus('ok');
-    } catch(e2) {
-      syncStatus('err');
-      toast('同步失敗，資料已保存在本機');
-    }
-  }
+    await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(collectAllData()) });
+    syncStatus('ok');
+  } catch(e) { syncStatus('err'); }
 }
 
 async function loadFromCloud() {
