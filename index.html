@@ -1542,11 +1542,14 @@ function getTotalCost(year) {
   const items = (settings.costItems || [])
     .filter(i => !i.year || i.year <= y)
     .reduce((s, i) => s + (i.amount || 0), 0);
-  // 歷年累積利息（已填月份的實際利息）
+  // 歷年累積利息（從貸款起算年月開始）
   let totalInterest = 0;
-  for (let yr = START_YEAR; yr <= y; yr++) {
+  const loanStartYear = settings.loanStartYear || settings.startYear || START_YEAR;
+  const loanStartMonth = settings.loanStartMonth || 1;
+  for (let yr = loanStartYear; yr <= y; yr++) {
     const yd = (yr === currentYear) ? yearData : loadYearData(yr);
-    for (let m = 1; m <= 12; m++) {
+    const mStart = (yr === loanStartYear) ? loanStartMonth : 1;
+    for (let m = mStart; m <= 12; m++) {
       if (yd[m]) totalInterest += yd[m].mortgageInterest || 0;
     }
   }
