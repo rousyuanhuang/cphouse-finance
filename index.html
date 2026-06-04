@@ -1745,15 +1745,19 @@ function collectAllData() {
 
 async function saveToCloud() {
   syncStatus('saving');
+  localStorage.setItem('yc_last_saved', Date.now().toString());
   try {
-    await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(collectAllData()) });
-    syncStatus('ok');
-  } catch(e) { syncStatus('err'); }
+    const payload = encodeURIComponent(JSON.stringify(collectAllData()));
+    const r = await fetch(API_URL + '?action=save&data=' + payload);
+    const text = await r.text();
+    if (text === 'ok') { syncStatus('ok'); } else { syncStatus('err'); }
+  } catch(e) { syncStatus('err'); console.error('saveToCloud error:', e); }
 }
 
 async function loadFromCloud() {
   try {
     const r = await fetch(API_URL + '?t=' + Date.now());
+    if (!r.ok) { console.error('loadFromCloud HTTP error:', r.status); return false; }
     const text = await r.text();
     if (!text || text === '{}') return false;
     const data = JSON.parse(text);
@@ -1761,6 +1765,7 @@ async function loadFromCloud() {
     // 比較時間戳，雲端比本機新才覆蓋
     const localTs = parseInt(localStorage.getItem('yc_last_saved') || '0');
     const cloudTs = parseInt(data.yc_last_saved || '0');
+    console.log('sync: localTs=' + localTs + ' cloudTs=' + cloudTs);
     if (cloudTs >= localTs) {
       Object.entries(data).forEach(([k, v]) => { if (k.startsWith('yc_')) localStorage.setItem(k, v); });
       return true;
@@ -1769,7 +1774,7 @@ async function loadFromCloud() {
       setTimeout(() => saveToCloud(), 500);
       return false;
     }
-  } catch(e) { return false; }
+  } catch(e) { console.error('loadFromCloud error:', e); return false; }
 }
 
 function toast(msg) {
