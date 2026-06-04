@@ -1747,8 +1747,10 @@ async function saveToCloud() {
   syncStatus('saving');
   localStorage.setItem('yc_last_saved', Date.now().toString());
   try {
-    const payload = encodeURIComponent(JSON.stringify(collectAllData()));
-    const r = await fetch(API_URL + '?action=save&data=' + payload);
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(collectAllData())
+    });
     const text = await r.text();
     if (text === 'ok') { syncStatus('ok'); } else { syncStatus('err'); }
   } catch(e) { syncStatus('err'); console.error('saveToCloud error:', e); }
