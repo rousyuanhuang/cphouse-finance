@@ -16,12 +16,13 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // 不攔截 Google Apps Script API 請求
+  if (e.request.url.includes('script.google.com')) return;
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request))
   );
 });
 
-// 收到 SKIP_WAITING 訊息立即啟動新版本
 self.addEventListener('message', e => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
