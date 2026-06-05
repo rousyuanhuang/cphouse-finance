@@ -271,6 +271,7 @@
   <select id="propSelect" onchange="switchProperty(this.value)"></select>
   <button class="prop-nav-btn" onclick="nextProperty()">▶</button>
   <button class="prop-add-btn" onclick="addPropertyPrompt()">＋ 新增地點</button>
+  <button class="prop-add-btn" onclick="renamePropertyPrompt()" style="background:var(--primary-light);">✎ 改名</button>
   <button class="prop-del-btn" onclick="deletePropertyPrompt()"></button>
 </div>
 
@@ -708,6 +709,17 @@ function addPropertyPrompt() {
   props.push({ id, name: name.trim() });
   savePropertiesStore(props);
   switchProperty(id);
+}
+
+function renamePropertyPrompt() {
+  const props = getProperties();
+  const cur = props.find(p => p.id === currentPropertyId);
+  const newName = prompt('新地點名稱：', cur?.name || '');
+  if (!newName || !newName.trim()) return;
+  cur.name = newName.trim();
+  savePropertiesStore(props);
+  renderPropSelector();
+  toast('地點名稱已更新');
 }
 
 function deletePropertyPrompt() {
