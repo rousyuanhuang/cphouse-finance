@@ -1297,6 +1297,12 @@ function updOwnerPropIds(idx, checkbox) {
     accounts[idx].propIds = accounts[idx].propIds.filter(id => id !== checkbox.value);
   }
   saveOwnerAccounts(accounts);
+  const count = accounts[idx].propIds.length;
+  const collapseDiv = checkbox.closest('.prop-collapse');
+  if (collapseDiv) {
+    const label = collapseDiv.previousElementSibling.querySelector('span');
+    if (label) label.textContent = count > 0 ? count + ' 個物件' : '選擇物件';
+  }
 }
 
 function filterPropSelect(allowedIds) {
