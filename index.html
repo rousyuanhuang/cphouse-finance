@@ -1779,7 +1779,9 @@ async function _encrypt(obj) {
   const combined = new Uint8Array(12 + buf.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(buf), 12);
-  return btoa(String.fromCharCode(...combined));
+  let binary = '';
+  for (let i = 0; i < combined.length; i++) binary += String.fromCharCode(combined[i]);
+  return btoa(binary);
 }
 
 async function _decrypt(b64) {
