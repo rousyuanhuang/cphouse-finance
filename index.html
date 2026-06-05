@@ -554,6 +554,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ── LZString 壓縮庫 ──
+var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length;n++)t[o][o.charAt(n)]=n}return t[o][r]}var r=String.fromCharCode,n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",t={},i={compressToBase64:function(o){if(null==o)return"";var r=i._compress(o,6,function(o){return n.charAt(o)});switch(r.length%4){default:case 0:return r;case 1:return r+"===";case 2:return r+"==";case 3:return r+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(e){return o(n,r.charAt(e))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(o){return null==o?"":""==o?null:i._decompress(o.length,16384,function(r){return o.charCodeAt(r)-32})},compressToUint8Array:function(o){for(var r=i.compress(o),n=new Uint8Array(2*r.length),e=0,t=r.length;e<t;e++){var s=r.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var r=new Array(o.length/2),n=0,e=r.length;n<e;n++)r[n]=256*o[2*n]+o[2*n+1];var t=[];return r.forEach(function(o){t.push(r(o))}),i.decompress(t.join(""))},compressToEncodedURIComponent:function(o){return null==o?"":i._compress(o,6,function(o){return e.charAt(o)})},decompressFromEncodedURIComponent:function(o){return null==o?"":""==o?null:(o=o.replace(/ /g,"+"),i._decompress(o.length,32,function(r){return o(e,o.charAt(r))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},decompress:function(o){return null==o?"":""==o?null:i._decompress(o.length,32768,function(r){return o.charCodeAt(r)})},_compress:function(o,r,n){if(null==o)return"";var e,t,i,s={},p={},u="",a="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<o.length;i+=1){u=o.charAt(i);Object.prototype.hasOwnProperty.call(s,u)||(s[u]=f++,p[u]=!0);a=c+u;if(Object.prototype.hasOwnProperty.call(s,a))c=a;else{if(Object.prototype.hasOwnProperty.call(p,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m=m<<1,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++}else{for(t=1,e=0;e<h;e++)m=m<<1|t,t=0,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++}l--,0==l&&(l=Math.pow(2,h),h++);delete p[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++;l--,0==l&&(l=Math.pow(2,h),h++);s[a]=f++,c=String(u)}}if(""!==c){if(Object.prototype.hasOwnProperty.call(p,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m=m<<1,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++}else{for(t=1,e=0;e<h;e++)m=m<<1|t,t=0,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++}l--,0==l&&(l=Math.pow(2,h),h++);delete p[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++;l--,0==l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|t&1,t>>=1,v==r-1?(v=0,d.push(n(m)),m=0):v++;for(;;){if(m=m<<1,v==r-1){d.push(n(m));break}v++}return d.join("")},_decompress:function(o,n,e){var t,i,s,p,u,a,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(i=0;i<3;i+=1)l[i]=i;for(s=0,u=Math.pow(2,2),a=1;a!=u;)p=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(p>0?1:0)*a,a<<=1;switch(t=s){case 0:for(s=0,u=Math.pow(2,8),a=1;a!=u;)p=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(p>0?1:0)*a,a<<=1;c=r(s);break;case 1:for(s=0,u=Math.pow(2,16),a=1;a!=u;)p=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(p>0?1:0)*a,a<<=1;c=r(s);break;case 2:return""}for(v.push(c),l[3]=c,m=c;;){if(g.index>o)return"";for(s=0,u=Math.pow(2,d),a=1;a!=u;)p=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(p>0?1:0)*a,a<<=1;switch(c=s){case 0:for(s=0,u=Math.pow(2,8),a=1;a!=u;)p=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(p>0?1:0)*a,a<<=1;l[f++]=r(s),c=f-1,h--;break;case 1:for(s=0,u=Math.pow(2,16),a=1;a!=u;)p=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(p>0?1:0)*a,a<<=1;l[f++]=r(s),c=f-1,h--;break;case 2:return v.join("")}if(0==h&&(h=Math.pow(2,d),d++),l[c])i=l[c];else{if(c!==f)return null;i=m+m.charAt(0)}v.push(i),l[f++]=m+i.charAt(0),h--,m=i,0==h&&(h=Math.pow(2,d),d++)}}}();
+
 // ── Service Worker ──
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1747,12 +1750,11 @@ async function saveToCloud() {
   syncStatus('saving');
   localStorage.setItem('yc_last_saved', Date.now().toString());
   try {
-    const allData = collectAllData();
-    for (const [key, val] of Object.entries(allData)) {
-      const url = API_URL + '?action=save&key=' + encodeURIComponent(key) + '&val=' + encodeURIComponent(val);
-      await fetch(url);
-    }
-    syncStatus('ok');
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(collectAllData()));
+    const url = API_URL + '?action=save&data=' + compressed;
+    const r = await fetch(url);
+    const text = await r.text();
+    if (text === 'ok') { syncStatus('ok'); } else { syncStatus('err'); }
   } catch(e) { syncStatus('err'); console.error('saveToCloud error:', e); }
 }
 
@@ -1763,17 +1765,21 @@ async function loadFromCloud() {
     if (!r.ok) { console.error('loadFromCloud HTTP error:', r.status); return false; }
     const text = await r.text();
     if (!text || text === '{}') return false;
-    const data = JSON.parse(text);
+    // 嘗試解壓縮（新格式），若失敗則直接 JSON.parse（舊格式）
+    let data;
+    try {
+      const decompressed = LZString.decompressFromEncodedURIComponent(text);
+      data = JSON.parse(decompressed || text);
+    } catch {
+      data = JSON.parse(text);
+    }
     if (typeof data !== 'object') return false;
-    // 比較時間戳，雲端比本機新才覆蓋
     const localTs = parseInt(localStorage.getItem('yc_last_saved') || '0');
     const cloudTs = parseInt(data.yc_last_saved || '0');
-    console.log('sync: localTs=' + localTs + ' cloudTs=' + cloudTs);
     if (cloudTs >= localTs) {
       Object.entries(data).forEach(([k, v]) => { if (k.startsWith('yc_')) localStorage.setItem(k, v); });
       return true;
     } else {
-      // 本機比較新，上傳本機資料到雲端
       setTimeout(() => saveToCloud(), 500);
       return false;
     }
