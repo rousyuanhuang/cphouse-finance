@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cp-finance-v3';
+const CACHE_NAME = 'cp-finance-v4';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
