@@ -1725,6 +1725,7 @@ function resetAllData() {
 // ═══════════════ 雲端同步 (Firebase) ═══════════════
 
 const FIREBASE_URL = 'https://cpfianace-default-rtdb.asia-southeast1.firebasedatabase.app';
+const APP_SECRET = 'CPFinance-YC-2024-Secure';
 
 function syncStatus(state) {
   const el = document.getElementById('syncStatus');
@@ -1743,14 +1744,43 @@ function collectAllData() {
   return d;
 }
 
+async function _deriveKey() {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(APP_SECRET), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: enc.encode('cpfinance-salt-v1'), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+
+async function _encrypt(obj) {
+  const key = await _deriveKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const buf = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
+  const combined = new Uint8Array(12 + buf.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(buf), 12);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function _decrypt(b64) {
+  const key = await _deriveKey();
+  const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const buf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: combined.slice(0, 12) }, key, combined.slice(12));
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+
 async function saveToCloud() {
   syncStatus('saving');
-  localStorage.setItem('yc_last_saved', Date.now().toString());
+  const ts = Date.now();
+  localStorage.setItem('yc_last_saved', ts.toString());
   try {
+    const enc = await _encrypt(collectAllData());
     const r = await fetch(FIREBASE_URL + '/cpfinance/data.json', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(collectAllData())
+      body: JSON.stringify({ ts, enc })
     });
     if (r.ok) { syncStatus('ok'); } else { syncStatus('err'); }
   } catch(e) { syncStatus('err'); console.error('saveToCloud error:', e); }
@@ -1760,11 +1790,13 @@ async function loadFromCloud() {
   try {
     const r = await fetch(FIREBASE_URL + '/cpfinance/data.json?t=' + Date.now());
     if (!r.ok) return false;
-    const data = await r.json();
-    if (!data || typeof data !== 'object') return false;
+    const payload = await r.json();
+    if (!payload || !payload.enc) return false;
     const localTs = parseInt(localStorage.getItem('yc_last_saved') || '0');
-    const cloudTs = parseInt(data.yc_last_saved || '0');
+    const cloudTs = parseInt(payload.ts || '0');
     if (cloudTs >= localTs) {
+      const data = await _decrypt(payload.enc);
+      if (!data || typeof data !== 'object') return false;
       Object.entries(data).forEach(([k, v]) => { if (k.startsWith('yc_')) localStorage.setItem(k, v); });
       return true;
     } else {
