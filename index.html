@@ -1747,13 +1747,15 @@ async function saveToCloud() {
   syncStatus('saving');
   localStorage.setItem('yc_last_saved', Date.now().toString());
   try {
-    const formData = new URLSearchParams();
-    formData.append('data', JSON.stringify(collectAllData()));
-    const r = await fetch(API_URL, { method: 'POST', body: formData });
-    const text = await r.text();
-    if (text === 'ok') { syncStatus('ok'); } else { syncStatus('err'); }
+    const allData = collectAllData();
+    for (const [key, val] of Object.entries(allData)) {
+      const url = API_URL + '?action=save&key=' + encodeURIComponent(key) + '&val=' + encodeURIComponent(val);
+      await fetch(url);
+    }
+    syncStatus('ok');
   } catch(e) { syncStatus('err'); console.error('saveToCloud error:', e); }
 }
+
 
 async function loadFromCloud() {
   try {
