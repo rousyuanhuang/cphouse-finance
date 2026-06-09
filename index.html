@@ -234,6 +234,12 @@
 .stat-label { color: var(--text-muted); flex: 1; text-align: right; }
 .stat-value { min-width: 80px; text-align: right; }
 .stat-unit { color: var(--text-muted); font-size: 13px; }
+
+@media print {
+  * { color: #000 !important; }
+  .green { color: #1a7a3a !important; }
+  .red { color: #a00 !important; }
+}
 </style>
 </head>
 <body>
